@@ -55,6 +55,23 @@ textarea {
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
 }
 
+.hero-copy {
+  max-width: 760px;
+}
+
+.hero-kicker {
+  display: inline-block;
+  margin-bottom: 14px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #d8f0ff;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .hero h1 {
   margin: 0 0 12px;
   font-size: clamp(2.2rem, 4vw, 4rem);
@@ -102,6 +119,24 @@ textarea {
   background: var(--panel);
   padding: 24px;
   backdrop-filter: blur(12px);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.section-tag {
+  white-space: nowrap;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(125, 211, 252, 0.08);
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  color: var(--accent);
+  font-size: 0.8rem;
 }
 
 .panel h2,
@@ -172,6 +207,13 @@ textarea {
   gap: 16px;
 }
 
+.empty-card {
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .score-row {
   display: flex;
   align-items: flex-end;
@@ -239,6 +281,36 @@ textarea {
   color: var(--muted);
 }
 
+.audit-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 0;
+}
+
+.audit-line span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.loading-panel {
+  margin-top: 24px;
+}
+
+.loading-pulse {
+  width: 88px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.35), rgba(125, 211, 252, 0.8), rgba(34, 197, 94, 0.35));
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  margin-bottom: 18px;
+}
+
 .locked-card {
   padding: 18px;
   border-radius: 18px;
@@ -301,4 +373,36 @@ textarea {
 .subtle {
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .page-shell {
+    width: min(100% - 20px, 1100px);
+    padding: 20px 0 48px;
+  }
+
+  .hero,
+  .panel {
+    padding: 20px;
+  }
+
+  .score-row,
+  .section-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .metric-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
