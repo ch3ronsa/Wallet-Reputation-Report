@@ -45,6 +45,7 @@ export interface MoonPayFundingPlan {
   available: boolean;
   skillName: string;
   description: string;
+  targetWalletName?: string;
   targetWalletAddress?: string;
   targetAsset?: string;
   suggestedAmount?: number;

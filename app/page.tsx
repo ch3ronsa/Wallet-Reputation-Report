@@ -10,6 +10,7 @@ import { FreeSummaryCard } from "@/components/report-ui/free-summary-card";
 import { PremiumTeaserCard } from "@/components/report-ui/premium-teaser-card";
 import { PaywallPanel } from "@/components/report-ui/paywall-panel";
 import { PremiumReportView } from "@/components/report-ui/premium-report-view";
+import { StackProofGrid } from "@/components/report-ui/stack-proof-grid";
 
 async function postJson<T>(url: string, body: Record<string, unknown>, headers?: HeadersInit): Promise<{
   status: number;
@@ -40,9 +41,11 @@ const COPY = {
 export default function HomePage() {
   const [address, setAddress] = useState("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045");
   const [freeReport, setFreeReport] = useState<FreeReportResponse["report"]>();
-  const [freeMode, setFreeMode] = useState<"mock" | "real">("mock");
+  const [freeDataMode, setFreeDataMode] = useState<"mock" | "real">("mock");
   const [fullReport, setFullReport] = useState<FullReportResponse["report"]>();
+  const [fullDataMode, setFullDataMode] = useState<"mock" | "real">("mock");
   const [paywall, setPaywall] = useState<Omit<FullReportResponse, "report">>();
+  const [paymentMode, setPaymentMode] = useState<"mock" | "real">("mock");
   const [paymentState, setPaymentState] = useState<PaymentState>("locked");
   const [paymentMessage, setPaymentMessage] = useState<string>();
   const [unlockSessionId, setUnlockSessionId] = useState<string>();
@@ -52,14 +55,18 @@ export default function HomePage() {
   const [loadingPayment, setLoadingPayment] = useState(false);
   const [error, setError] = useState<string>();
 
-  const auditMode = useMemo(() => fullReport ? "real" : paywall?.mode ?? freeMode, [freeMode, fullReport, paywall?.mode]);
+  const hasFreeSummary = Boolean(freeReport);
+  const auditDataMode = useMemo(() => (fullReport ? fullDataMode : freeDataMode), [freeDataMode, fullDataMode, fullReport]);
 
   async function handleGenerateSummary(event: FormEvent) {
     event.preventDefault();
     setLoadingFree(true);
     setError(undefined);
+    setFreeReport(undefined);
     setFullReport(undefined);
+    setFullDataMode("mock");
     setPaywall(undefined);
+    setPaymentMode("mock");
     setPaymentState("locked");
     setPaymentMessage(undefined);
     setUnlockSessionId(undefined);
@@ -75,7 +82,7 @@ export default function HomePage() {
         throw new Error(data.error ?? "Unable to generate summary.");
       }
 
-      setFreeMode(data.mode);
+      setFreeDataMode(data.dataMode);
       setFreeReport(data.report);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Unable to generate summary.");
@@ -93,8 +100,9 @@ export default function HomePage() {
 
     if (status === 402) {
       setPaywall(data);
+      setPaymentMode(data.paymentMode);
       setPaymentState(data.paymentState ?? "locked");
-      setPaymentMessage(COPY.locked);
+      setPaymentMessage(data.error ?? COPY.locked);
       return false;
     }
 
@@ -102,6 +110,8 @@ export default function HomePage() {
       throw new Error(data.error ?? "Unable to load the full report.");
     }
 
+    setFullDataMode(data.dataMode);
+    setPaymentMode(data.paymentMode);
     setFullReport(data.report);
     setPaywall(undefined);
     setPaymentState("paid");
@@ -110,6 +120,11 @@ export default function HomePage() {
   }
 
   async function handleOpenPremium() {
+    if (!freeReport) {
+      setError("Generate the free summary first so the premium unlock starts from a visible wallet snapshot.");
+      return;
+    }
+
     setLoadingFull(true);
     setError(undefined);
 
@@ -138,11 +153,13 @@ export default function HomePage() {
 
       setPaywall((current) => ({
         ...current,
-        mode: data.mode ?? current?.mode ?? "mock",
+        dataMode: current?.dataMode ?? freeDataMode,
+        paymentMode: data.paymentMode ?? current?.paymentMode ?? "mock",
         owsService: data.owsService,
         owsWorkflow: data.owsWorkflow,
         moonpay: data.moonpay,
       }));
+      setPaymentMode(data.paymentMode);
       setUnlockSessionId(data.session.sessionId);
       setPaymentState(data.session.state);
       setPaymentMessage(data.session.message || COPY.pending);
@@ -178,11 +195,13 @@ export default function HomePage() {
 
       setPaywall((current) => ({
         ...current,
-        mode: data.mode ?? current?.mode ?? "mock",
+        dataMode: current?.dataMode ?? freeDataMode,
+        paymentMode: data.paymentMode ?? current?.paymentMode ?? "mock",
         owsService: data.owsService,
         owsWorkflow: data.owsWorkflow,
         moonpay: data.moonpay,
       }));
+      setPaymentMode(data.paymentMode);
       setPaymentState(data.session.state);
       setPaymentMessage(data.session.message);
 
@@ -211,16 +230,29 @@ export default function HomePage() {
       <HeroSection />
 
       <StatusAuditLine
-        mode={auditMode}
+        dataMode={auditDataMode}
+        paymentMode={paymentMode}
         paymentState={paymentState}
         chain={fullReport?.chain ?? freeReport?.chain}
         generatedAt={fullReport?.generatedAt}
+        moonPayAvailable={paywall?.moonpay?.available}
+        moonPayLabel={paywall?.moonpay?.skillName}
+        owsWalletName={paywall?.owsService?.walletName}
+      />
+
+      <StackProofGrid
+        dataMode={auditDataMode}
+        paymentMode={paymentMode}
+        moonPayAvailable={paywall?.moonpay?.available}
+        moonPaySkillName={paywall?.moonpay?.skillName}
+        owsWalletName={paywall?.owsService?.walletName}
       />
 
       <section className="grid">
         <WalletForm
           address={address}
           error={error}
+          hasFreeSummary={hasFreeSummary}
           loadingFree={loadingFree}
           loadingFull={loadingFull}
           onAddressChange={setAddress}
@@ -261,9 +293,11 @@ export default function HomePage() {
         <FreeSummaryCard report={freeReport} />
         {!fullReport ? (
           <PremiumTeaserCard
+            paymentMode={paymentMode}
             paymentState={paymentState}
             paymentMessage={paymentMessage}
             loadingPayment={loadingPayment}
+            canVerifyPayment={Boolean(unlockSessionId)}
             onStartPayment={handleStartPayment}
             onVerifyPayment={handleVerifyPayment}
             owsWalletLabel={paywall?.owsService ? `${paywall.owsService.walletName} | ${paywall.owsService.address}` : undefined}

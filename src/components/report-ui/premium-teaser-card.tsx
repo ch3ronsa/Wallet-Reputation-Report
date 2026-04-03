@@ -1,9 +1,11 @@
 import { PaymentState } from "@/types/api";
 
 type PremiumTeaserCardProps = {
+  paymentMode: "mock" | "real";
   paymentState: PaymentState;
   paymentMessage?: string;
   loadingPayment: boolean;
+  canVerifyPayment: boolean;
   onStartPayment: () => void;
   onVerifyPayment: () => void;
   owsWalletLabel?: string;
@@ -24,18 +26,28 @@ export function PremiumTeaserCard(props: PremiumTeaserCardProps) {
         <div className="locked-badge">Premium</div>
         <h3>Decision-grade wallet intelligence</h3>
         <p>
-          Unlock score breakdown, signal details, notable counterparties, concentration analysis, activity observations,
-          limitations, and plain-language interpretation.
+          Unlock score breakdown, signal details, counterparties, concentration analysis, activity observations,
+          limitations, and a decision-ready interpretation.
         </p>
         {props.owsWalletLabel ? <p className="subtle">Service wallet: {props.owsWalletLabel}</p> : null}
+        <p className="subtle">
+          {props.paymentMode === "real"
+            ? "This report uses the live x402 payment boundary."
+            : "This demo uses a time-bound x402-style unlock token so the paywall stays visible without requiring live settlement."}
+        </p>
       </div>
 
       <div className="button-row">
         <button className="button button-primary" type="button" onClick={props.onStartPayment} disabled={props.loadingPayment}>
-          {props.loadingPayment ? "Starting payment..." : "Pay to unlock full report"}
+          {props.loadingPayment ? "Starting payment..." : "Start paid unlock"}
         </button>
-        <button className="button button-secondary" type="button" onClick={props.onVerifyPayment} disabled={props.loadingPayment}>
-          {props.loadingPayment ? "Verifying..." : "Verify payment"}
+        <button
+          className="button button-secondary"
+          type="button"
+          onClick={props.onVerifyPayment}
+          disabled={props.loadingPayment || !props.canVerifyPayment}
+        >
+          {props.loadingPayment ? "Verifying..." : "Verify x402 payment"}
         </button>
       </div>
 

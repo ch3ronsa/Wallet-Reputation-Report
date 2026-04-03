@@ -5,15 +5,16 @@ export function HeroSection() {
         <span className="hero-kicker">Paid onchain intelligence</span>
         <h1>Wallet Reputation Report</h1>
         <p>
-          Fast trust and risk signals for a wallet, with a concise free read first and a paid intelligence layer when
-          the operator needs deeper underwriting context.
+          A clean wallet risk read powered by Allium, priced with x402, and delivered through an OWS-native payment
+          flow with MoonPay top-up support when the buyer wallet needs funds.
         </p>
       </div>
       <div className="hero-badges">
-        <span className="badge">Free summary</span>
+        <span className="badge">Allium intelligence</span>
         <span className="badge">Deterministic score</span>
         <span className="badge">x402 unlock</span>
-        <span className="badge">OWS + MoonPay ready</span>
+        <span className="badge">OWS wallet + CLI</span>
+        <span className="badge">MoonPay top-up</span>
       </div>
     </section>
   );

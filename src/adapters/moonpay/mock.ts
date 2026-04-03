@@ -7,6 +7,7 @@ export class MockMoonPayAdapter implements MoonPayAdapter {
       available: true,
       skillName: "moonpay-buy-crypto",
       description: "Top up the OWS buyer wallet before retrying the premium report unlock.",
+      targetWalletName: "report-buyer",
       targetWalletAddress: input.walletAddress,
       targetAsset: `USDC on ${input.chain}`,
       suggestedAmount: 10,

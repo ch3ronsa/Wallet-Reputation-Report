@@ -107,9 +107,37 @@ textarea {
   margin-top: 24px;
 }
 
+.proof-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.proof-card {
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  background: rgba(9, 22, 40, 0.72);
+  padding: 18px;
+}
+
+.proof-card h2 {
+  margin: 12px 0 10px;
+  font-size: 1.05rem;
+}
+
+.proof-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 @media (min-width: 960px) {
   .grid {
     grid-template-columns: 1.05fr 0.95fr;
+  }
+
+  .proof-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 
@@ -186,7 +214,7 @@ textarea {
 
 .button:disabled {
   opacity: 0.6;
-  cursor: wait;
+  cursor: not-allowed;
   transform: none;
 }
 
@@ -404,5 +432,9 @@ textarea {
 
   .metric-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .proof-grid {
+    grid-template-columns: 1fr;
   }
 }

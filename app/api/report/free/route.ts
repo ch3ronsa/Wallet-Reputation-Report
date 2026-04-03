@@ -10,13 +10,13 @@ export async function POST(request: NextRequest) {
     const report = await generateWalletReport(reportRequest);
 
     return NextResponse.json<FreeReportResponse>({
-      mode: report.wallet.dataSource === "allium" ? "real" : "mock",
+      dataMode: report.wallet.dataSource === "allium" ? "real" : "mock",
       report: report.freeSummary,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to generate free report.";
     return NextResponse.json<FreeReportResponse>(
-      { mode: "mock", error: message },
+      { dataMode: "mock", error: message },
       { status: 400 },
     );
   }

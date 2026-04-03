@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json<UnlockReportResponse>({
-      mode: resolveRuntimeMode(env.x402Mode),
+      paymentMode: resolveRuntimeMode(env.x402Mode),
       session,
       owsService,
       owsWorkflow,
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to start unlock flow.";
     return NextResponse.json<UnlockReportResponse>(
-      { mode: resolveRuntimeMode(env.x402Mode), error: message },
+      { paymentMode: resolveRuntimeMode(env.x402Mode), error: message },
       { status: 400 },
     );
   }

@@ -45,6 +45,7 @@ export interface MoonPayTopUpResponse {
   available: boolean;
   skillName: string;
   description: string;
+  targetWalletName?: string;
   targetWalletAddress?: string;
   targetAsset?: string;
   suggestedAmount?: number;
@@ -53,13 +54,14 @@ export interface MoonPayTopUpResponse {
 }
 
 export interface FreeReportResponse {
-  mode: "mock" | "real";
+  dataMode: "mock" | "real";
   report?: FreeSummary;
   error?: string;
 }
 
 export interface FullReportResponse {
-  mode: "mock" | "real";
+  dataMode: "mock" | "real";
+  paymentMode: "mock" | "real";
   report?: FullReport;
   requirements?: X402PaymentRequirement[];
   owsCommands?: string[];
@@ -75,7 +77,7 @@ export interface UnlockReportRequest extends WalletLookupRequest {
 }
 
 export interface UnlockReportResponse {
-  mode: "mock" | "real";
+  paymentMode: "mock" | "real";
   session?: UnlockSession;
   owsService?: OwsServiceIdentityResponse;
   owsWorkflow?: OwsCliWorkflowResponse;

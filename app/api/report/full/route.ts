@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json<FullReportResponse>(
         {
-          mode: resolveRuntimeMode(env.x402Mode),
+          dataMode: resolveRuntimeMode(env.alliumMode),
+          paymentMode: resolveRuntimeMode(env.x402Mode),
           paymentState: "locked",
           error: "Payment required for premium report.",
           requirements,
@@ -52,14 +53,19 @@ export async function POST(request: NextRequest) {
     const report = await generateWalletReport(reportRequest);
 
     return NextResponse.json<FullReportResponse>({
-      mode: report.wallet.dataSource === "allium" ? "real" : "mock",
+      dataMode: report.wallet.dataSource === "allium" ? "real" : "mock",
+      paymentMode: resolveRuntimeMode(env.x402Mode),
       paymentState: "paid",
       report: report.fullReport,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to generate premium report.";
     return NextResponse.json<FullReportResponse>(
-      { mode: resolveRuntimeMode(env.x402Mode), error: message },
+      {
+        dataMode: resolveRuntimeMode(env.alliumMode),
+        paymentMode: resolveRuntimeMode(env.x402Mode),
+        error: message,
+      },
       { status: 400 },
     );
   }

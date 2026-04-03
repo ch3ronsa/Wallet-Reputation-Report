@@ -13,9 +13,19 @@ export function PaywallPanel(props: PaywallPanelProps) {
     <section className="grid">
       <div className="panel">
         <div className="section-heading">
-          <h2>Payment path</h2>
-          <span className="section-tag">OWS</span>
+          <h2>Paid unlock path</h2>
+          <span className="section-tag">x402 + OWS</span>
         </div>
+        {props.paywall.requirements?.map((requirement) => (
+          <div className="signal neutral" key={`${requirement.receiver}-${requirement.resource}`}>
+            <strong>
+              {requirement.maxAmountRequired} {requirement.asset} on {requirement.network}
+            </strong>
+            <small>
+              x402 unlock target: {requirement.receiver} | Resource: {requirement.resource}
+            </small>
+          </div>
+        ))}
         {props.paywall.owsService ? (
           <div className="signal neutral">
             <strong>{props.paywall.owsService.walletName}</strong>
@@ -63,7 +73,8 @@ export function PaywallPanel(props: PaywallPanelProps) {
             </p>
             <div className="signal neutral">
               <small>
-                Availability: {props.paywall.moonpay.available ? "enabled" : "fallback mode"} | Asset:{" "}
+                Availability: {props.paywall.moonpay.available ? "enabled" : "fallback mode"} | Buyer wallet:{" "}
+                {props.paywall.moonpay.targetWalletName ?? "report-buyer"} | Asset:{" "}
                 {props.paywall.moonpay.targetAsset ?? "USDC"} | Suggested amount:{" "}
                 {props.paywall.moonpay.suggestedAmount ?? "custom"}
               </small>

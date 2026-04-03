@@ -246,3 +246,7 @@ For a compact judge demo, keep the focus on:
 - MoonPay as unlock-enabling top-up
 - Allium as the intelligence source
 - x402 as the monetization boundary
+
+## Demo Day Checklist
+
+See [docs/demo-checklist.md](docs/demo-checklist.md) for the final pre-demo verification list and the judge-facing talking points.

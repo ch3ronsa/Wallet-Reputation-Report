@@ -9,9 +9,10 @@ export function PremiumReportView(props: PremiumReportViewProps) {
     <section className="grid">
       <div className="panel report-card">
         <div className="section-heading">
-          <h2>Unlocked report</h2>
-          <span className="section-tag">Paid</span>
+          <h2>Interpretation</h2>
+          <span className="section-tag">Derived from score</span>
         </div>
+        <p className="subtle">Explanation only. The score itself remains deterministic and rule-based.</p>
         <div className="signal-list">
           <div className="signal positive">
             <strong>Plain-language interpretation</strong>
@@ -49,7 +50,7 @@ export function PremiumReportView(props: PremiumReportViewProps) {
 
       <div className="panel">
         <div className="section-heading">
-          <h2>Facts</h2>
+          <h2>Observed facts</h2>
           <span className="section-tag">Observed</span>
         </div>
         <h3>Notable counterparties</h3>
