@@ -2,7 +2,7 @@ export type SupportedChain = "base" | "ethereum";
 
 export type SignalImpact = "positive" | "negative" | "neutral";
 
-export type ReputationBand = "excellent" | "good" | "watch" | "risky";
+export type RiskLevel = "low" | "medium" | "high";
 
 export interface WalletTransaction {
   hash: string;
@@ -128,21 +128,34 @@ export interface WalletProfile {
 export interface RiskSignal {
   id: string;
   title: string;
+  category:
+    | "wallet-age"
+    | "history-depth"
+    | "token-concentration"
+    | "counterparty-concentration"
+    | "large-transfers"
+    | "contract-interactions"
+    | "activity-spike"
+    | "behavior-pattern";
   impact: SignalImpact;
   weight: number;
+  scoreImpact: number;
   explanation: string;
 }
 
 export interface ReputationScore {
-  value: number;
-  band: ReputationBand;
+  totalScore: number;
+  riskLevel: RiskLevel;
   signals: RiskSignal[];
+  summaryReasons: string[];
+  uncertaintyNote: string | null;
 }
 
 export interface ReportSummary {
   headline: string;
   verdict: string;
   bullets: string[];
+  uncertaintyNote: string | null;
 }
 
 export interface PremiumInsight {

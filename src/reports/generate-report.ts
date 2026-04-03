@@ -8,13 +8,13 @@ export class DefaultReportGenerator implements ReportGenerator {
   async generate(request: WalletLookupRequest): Promise<FullReport> {
     const alliumClient = createAlliumClient();
     const wallet = await alliumClient.getWalletProfile(request);
-    const score = scoreWallet(wallet.metrics);
+    const score = scoreWallet(wallet);
 
     return {
       wallet,
       score,
-      summary: buildReportSummary(score, wallet.metrics),
-      premiumInsights: buildPremiumInsights(wallet.metrics, score),
+      summary: buildReportSummary(score, wallet),
+      premiumInsights: buildPremiumInsights(wallet, score),
       generatedAt: new Date().toISOString(),
     };
   }

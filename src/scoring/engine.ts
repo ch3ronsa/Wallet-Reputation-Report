@@ -1,11 +1,13 @@
+import { SCORE_BASE, SCORE_THRESHOLDS, SIGNAL_WEIGHTS } from "@/scoring/model";
 import {
   PremiumInsight,
-  ReputationBand,
-  ReputationScore,
   ReportSummary,
+  ReputationScore,
+  RiskLevel,
   RiskSignal,
   WalletBalance,
   WalletMetrics,
+  WalletProfile,
   WalletTransaction,
 } from "@/types/domain";
 
@@ -55,227 +57,252 @@ export function buildWalletMetrics(input: {
   };
 }
 
-function bandFromValue(value: number): ReputationBand {
-  if (value >= 80) {
-    return "excellent";
+function resolveRiskLevel(totalScore: number): RiskLevel {
+  if (totalScore >= SCORE_THRESHOLDS.low.min) {
+    return "low";
   }
 
-  if (value >= 65) {
-    return "good";
+  if (totalScore >= SCORE_THRESHOLDS.medium.min) {
+    return "medium";
   }
 
-  if (value >= 45) {
-    return "watch";
-  }
-
-  return "risky";
+  return "high";
 }
 
-function addSignal(target: RiskSignal[], accumulator: { value: number }, signal: RiskSignal): void {
-  accumulator.value += signal.weight;
-  target.push(signal);
-}
-
-export function scoreWallet(metrics: WalletMetrics): ReputationScore {
-  const accumulator = { value: 50 };
-  const signals: RiskSignal[] = [];
-
-  if (metrics.txCount >= 40) {
-    addSignal(signals, accumulator, {
-      id: "history-depth-strong",
-      title: "Deep transaction history",
-      impact: "positive",
-      weight: 14,
-      explanation: `${metrics.txCount} transactions were detected in the lookback window.`,
-    });
-  } else if (metrics.txCount <= 5) {
-    addSignal(signals, accumulator, {
-      id: "history-depth-thin",
-      title: "Thin transaction history",
-      impact: "negative",
-      weight: -12,
-      explanation: `Only ${metrics.txCount} transactions were available for analysis.`,
-    });
-  }
-
-  if (metrics.uniqueActiveDays >= 10) {
-    addSignal(signals, accumulator, {
-      id: "cadence-healthy",
-      title: "Consistent onchain cadence",
-      impact: "positive",
-      weight: 10,
-      explanation: `Activity spans ${metrics.uniqueActiveDays} distinct days.`,
-    });
-  } else if (metrics.uniqueActiveDays <= 2) {
-    addSignal(signals, accumulator, {
-      id: "cadence-bursty",
-      title: "Burst-only activity pattern",
-      impact: "negative",
-      weight: -8,
-      explanation: "Activity is concentrated into very few days.",
-    });
-  }
-
-  if (metrics.uniqueCounterparties >= 12) {
-    addSignal(signals, accumulator, {
-      id: "counterparty-diversity",
-      title: "Healthy counterparty diversity",
-      impact: "positive",
-      weight: 8,
-      explanation: `${metrics.uniqueCounterparties} counterparties suggests broader network usage.`,
-    });
-  } else if (metrics.uniqueCounterparties <= 2) {
-    addSignal(signals, accumulator, {
-      id: "counterparty-concentration",
-      title: "Counterparty concentration",
-      impact: "negative",
-      weight: -8,
-      explanation: "Most activity centers on only one or two counterparties.",
-    });
-  }
-
-  if (metrics.failedTxRatio >= 0.2) {
-    addSignal(signals, accumulator, {
-      id: "failed-ratio-high",
-      title: "High failed transaction ratio",
-      impact: "negative",
-      weight: -16,
-      explanation: `${Math.round(metrics.failedTxRatio * 100)}% of visible transactions appear unsuccessful.`,
-    });
-  } else if (metrics.failedTxRatio <= 0.05 && metrics.txCount > 0) {
-    addSignal(signals, accumulator, {
-      id: "failed-ratio-low",
-      title: "Clean execution history",
-      impact: "positive",
-      weight: 6,
-      explanation: "The wallet shows a low failed transaction ratio.",
-    });
-  }
-
-  if (metrics.stablecoinShare >= 0.2 && metrics.stablecoinShare <= 0.85) {
-    addSignal(signals, accumulator, {
-      id: "stable-balance",
-      title: "Balanced stablecoin exposure",
-      impact: "positive",
-      weight: 8,
-      explanation: `${Math.round(metrics.stablecoinShare * 100)}% of holdings are in stablecoins.`,
-    });
-  } else if (metrics.stablecoinShare === 0 && metrics.totalPortfolioUsd > 250) {
-    addSignal(signals, accumulator, {
-      id: "stable-none",
-      title: "No stable reserve visible",
-      impact: "neutral",
-      weight: -3,
-      explanation: "The visible portfolio does not include a stable reserve asset.",
-    });
-  }
-
-  if (metrics.largestAssetShare >= 0.9 && metrics.totalPortfolioUsd > 100) {
-    addSignal(signals, accumulator, {
-      id: "asset-concentration-high",
-      title: "Extreme asset concentration",
-      impact: "negative",
-      weight: -10,
-      explanation: `${Math.round(metrics.largestAssetShare * 100)}% of the visible portfolio sits in one asset.`,
-    });
-  } else if (metrics.largestAssetShare <= 0.5 && metrics.totalPortfolioUsd > 100) {
-    addSignal(signals, accumulator, {
-      id: "asset-concentration-balanced",
-      title: "Balanced visible holdings",
-      impact: "positive",
-      weight: 5,
-      explanation: "No single visible asset dominates the portfolio.",
-    });
-  }
-
-  if (metrics.nativeBalanceUsd < 2 && metrics.txCount > 0) {
-    addSignal(signals, accumulator, {
-      id: "gas-runway-low",
-      title: "Low native gas runway",
-      impact: "neutral",
-      weight: -4,
-      explanation: "The wallet may have limited gas capacity for future activity.",
-    });
-  } else if (metrics.nativeBalanceUsd >= 10) {
-    addSignal(signals, accumulator, {
-      id: "gas-runway-healthy",
-      title: "Healthy native gas reserve",
-      impact: "positive",
-      weight: 4,
-      explanation: "Visible native balance suggests sustainable activity.",
-    });
-  }
-
-  if (metrics.suspiciousLabelCount > 0) {
-    addSignal(signals, accumulator, {
-      id: "suspicious-labels",
-      title: "Suspicious labels detected",
-      impact: "negative",
-      weight: -24,
-      explanation: `${metrics.suspiciousLabelCount} labels matched known high-risk keywords.`,
-    });
-  }
-
-  const value = clamp(Math.round(accumulator.value), 0, 100);
-
+function makeSignal(input: Omit<RiskSignal, "impact" | "scoreImpact"> & { positive?: boolean }): RiskSignal {
   return {
-    value,
-    band: bandFromValue(value),
-    signals,
+    ...input,
+    impact: input.positive ? "positive" : "negative",
+    scoreImpact: -Math.abs(input.weight),
   };
 }
 
-export function buildReportSummary(score: ReputationScore, metrics: WalletMetrics): ReportSummary {
-  const headlineByBand: Record<ReputationBand, string> = {
-    excellent: "High-confidence wallet profile",
-    good: "Healthy wallet profile",
-    watch: "Mixed wallet profile",
-    risky: "Elevated-risk wallet profile",
-  };
+function detectVeryNewWallet(wallet: WalletProfile): RiskSignal | null {
+  const ageDays = wallet.age.walletAgeDays;
 
-  const verdictByBand: Record<ReputationBand, string> = {
-    excellent: "Suitable for higher-trust flows with routine monitoring.",
-    good: "Reasonably trustworthy, but still worth monitoring over time.",
-    watch: "Requires manual review for sensitive or monetized workflows.",
-    risky: "Should remain in restricted or low-trust flows until more evidence appears.",
-  };
+  if (ageDays === null || ageDays > 14) {
+    return null;
+  }
 
-  const bullets = [...score.signals]
-    .sort((left, right) => Math.abs(right.weight) - Math.abs(left.weight))
+  return makeSignal({
+    id: "very-new-wallet",
+    title: "Very new wallet",
+    category: "wallet-age",
+    weight: SIGNAL_WEIGHTS.veryNewWallet,
+    explanation: `The wallet only shows about ${ageDays} days of observable history, which limits confidence and raises fresh-wallet risk.`,
+  });
+}
+
+function detectVeryLowActivity(wallet: WalletProfile): RiskSignal | null {
+  if (wallet.activity.txCount > 5 && wallet.activity.uniqueActiveDays > 2) {
+    return null;
+  }
+
+  return makeSignal({
+    id: "very-low-activity-history",
+    title: "Very low activity history",
+    category: "history-depth",
+    weight: SIGNAL_WEIGHTS.veryLowHistory,
+    explanation: `Only ${wallet.activity.txCount} transactions across ${wallet.activity.uniqueActiveDays} active days were available for scoring.`,
+  });
+}
+
+function detectHighTokenConcentration(wallet: WalletProfile): RiskSignal | null {
+  if (wallet.metrics.totalPortfolioUsd <= 100 || wallet.metrics.largestAssetShare < 0.85) {
+    return null;
+  }
+
+  const topToken = wallet.tokenConcentration[0];
+  const topLabel = topToken ? topToken.symbol : "one asset";
+
+  return makeSignal({
+    id: "high-token-concentration",
+    title: "High token concentration",
+    category: "token-concentration",
+    weight: SIGNAL_WEIGHTS.highTokenConcentration,
+    explanation: `${Math.round(wallet.metrics.largestAssetShare * 100)}% of visible holdings sit in ${topLabel}, which increases concentration risk.`,
+  });
+}
+
+function detectHighCounterpartyConcentration(wallet: WalletProfile): RiskSignal | null {
+  const leader = wallet.topCounterparties[0];
+
+  if (!leader || wallet.activity.txCount < 4) {
+    return null;
+  }
+
+  const share = leader.interactions / wallet.activity.txCount;
+
+  if (share < 0.6) {
+    return null;
+  }
+
+  return makeSignal({
+    id: "high-counterparty-concentration",
+    title: "High counterparty concentration",
+    category: "counterparty-concentration",
+    weight: SIGNAL_WEIGHTS.highCounterpartyConcentration,
+    explanation: `${Math.round(share * 100)}% of observed activity centers on a single counterparty, suggesting concentrated behavior.`,
+  });
+}
+
+function detectUnusualLargeTransfers(wallet: WalletProfile): RiskSignal | null {
+  if (wallet.metrics.totalPortfolioUsd <= 0) {
+    return null;
+  }
+
+  const largeTransfers = wallet.transactions.filter((transaction) => (transaction.valueUsd ?? 0) >= wallet.metrics.totalPortfolioUsd * 0.75);
+
+  if (largeTransfers.length === 0) {
+    return null;
+  }
+
+  return makeSignal({
+    id: "unusual-large-transfers",
+    title: "Unusual large transfers",
+    category: "large-transfers",
+    weight: SIGNAL_WEIGHTS.unusualLargeTransfers,
+    explanation: `${largeTransfers.length} transfer(s) were large relative to the visible wallet balance, which can indicate volatile treasury behavior.`,
+  });
+}
+
+function detectUnknownContractInteraction(wallet: WalletProfile): RiskSignal | null {
+  const unknownContracts = wallet.recentActivity.filter(
+    (activity) => activity.type === "unknown" || activity.labels.length === 0,
+  ).length;
+
+  if (wallet.contractInteractions.totalContractCalls < 3 || unknownContracts < 2) {
+    return null;
+  }
+
+  return makeSignal({
+    id: "frequent-unknown-contract-interaction",
+    title: "Frequent unknown contract interaction",
+    category: "contract-interactions",
+    weight: SIGNAL_WEIGHTS.frequentUnknownContractInteraction,
+    explanation: `${unknownContracts} recent contract interactions had weak labeling, which reduces explainability around wallet behavior.`,
+  });
+}
+
+function detectRecentSuddenSpike(wallet: WalletProfile): RiskSignal | null {
+  if (wallet.activity.uniqueActiveDays < 2 || wallet.activity.recentTxCount7d < 4) {
+    return null;
+  }
+
+  const olderTxCount = wallet.activity.txCount - wallet.activity.recentTxCount7d;
+  const olderDays = Math.max(wallet.activity.uniqueActiveDays - 7, 1);
+  const olderAverage = olderTxCount > 0 ? olderTxCount / olderDays : 0;
+
+  if (wallet.activity.recentTxCount7d < olderAverage * 3 || wallet.activity.recentTxCount7d < 6) {
+    return null;
+  }
+
+  return makeSignal({
+    id: "recent-sudden-activity-spike",
+    title: "Recent sudden activity spike",
+    category: "activity-spike",
+    weight: SIGNAL_WEIGHTS.recentSuddenActivitySpike,
+    explanation: `Recent activity is materially higher than the wallet's older cadence, which can indicate a sudden behavioral change.`,
+  });
+}
+
+function detectNarrowBehaviorPattern(wallet: WalletProfile): RiskSignal | null {
+  const transferHeavy = wallet.contractInteractions.pattern === "transfer-heavy";
+  const contractHeavy = wallet.contractInteractions.pattern === "contract-heavy";
+  const stableFlowCount = wallet.stablecoinFlow.transferCount;
+
+  if (!transferHeavy && !contractHeavy && wallet.topCounterparties.length > 2) {
+    return null;
+  }
+
+  const patternLabel = transferHeavy
+    ? "mostly simple transfers"
+    : contractHeavy
+      ? "mostly one-sided contract interactions"
+      : "a very narrow set of behaviors";
+
+  return makeSignal({
+    id: "suspiciously-narrow-behavior-pattern",
+    title: "Suspiciously narrow behavior pattern",
+    category: "behavior-pattern",
+    weight: SIGNAL_WEIGHTS.suspiciouslyNarrowBehaviorPattern,
+    explanation: `The wallet shows ${patternLabel}${stableFlowCount > 0 ? " with limited behavioral diversity beyond stablecoin flow" : ""}.`,
+  });
+}
+
+export function scoreWallet(wallet: WalletProfile): ReputationScore {
+  const candidateSignals = [
+    detectVeryNewWallet(wallet),
+    detectVeryLowActivity(wallet),
+    detectHighTokenConcentration(wallet),
+    detectHighCounterpartyConcentration(wallet),
+    detectUnusualLargeTransfers(wallet),
+    detectUnknownContractInteraction(wallet),
+    detectRecentSuddenSpike(wallet),
+    detectNarrowBehaviorPattern(wallet),
+  ].filter((signal): signal is RiskSignal => Boolean(signal));
+
+  const totalPenalty = candidateSignals.reduce((sum, signal) => sum + Math.abs(signal.weight), 0);
+  const totalScore = clamp(SCORE_BASE - totalPenalty, 0, 100);
+  const summaryReasons = [...candidateSignals]
+    .sort((left, right) => right.weight - left.weight)
     .slice(0, 3)
     .map((signal) => signal.explanation);
-
-  if (bullets.length === 0) {
-    bullets.push(
-      `Observed ${metrics.txCount} transactions and ${metrics.totalPortfolioUsd.toFixed(2)} USD in visible balances.`,
-    );
-  }
+  const uncertaintyNote = wallet.dataQuality.isSparse
+    ? `Confidence is limited because ${wallet.dataQuality.warnings.join(" ")}`
+    : null;
 
   return {
-    headline: headlineByBand[score.band],
-    verdict: verdictByBand[score.band],
-    bullets,
+    totalScore,
+    riskLevel: resolveRiskLevel(totalScore),
+    signals: candidateSignals,
+    summaryReasons:
+      summaryReasons.length > 0
+        ? summaryReasons
+        : ["No major deterministic risk signals fired from the currently available wallet data."],
+    uncertaintyNote,
   };
 }
 
-export function buildPremiumInsights(metrics: WalletMetrics, score: ReputationScore): PremiumInsight[] {
+export function buildReportSummary(score: ReputationScore, wallet: WalletProfile): ReportSummary {
+  const headlineByRiskLevel: Record<RiskLevel, string> = {
+    low: "Low-risk wallet profile",
+    medium: "Medium-risk wallet profile",
+    high: "High-risk wallet profile",
+  };
+
+  const verdictByRiskLevel: Record<RiskLevel, string> = {
+    low: "The wallet looks relatively stable based on the currently observable deterministic signals.",
+    medium: "The wallet shows mixed indicators and should be reviewed before trust-sensitive use cases.",
+    high: "The wallet triggers multiple risk signals and should stay in lower-trust flows.",
+  };
+
+  return {
+    headline: headlineByRiskLevel[score.riskLevel],
+    verdict: `${verdictByRiskLevel[score.riskLevel]} Score: ${score.totalScore}/100.`,
+    bullets: score.summaryReasons,
+    uncertaintyNote: score.uncertaintyNote,
+  };
+}
+
+export function buildPremiumInsights(wallet: WalletProfile, score: ReputationScore): PremiumInsight[] {
   return [
     {
-      title: "Trust recommendation",
+      title: "Risk posture",
       body:
-        score.band === "excellent" || score.band === "good"
-          ? "Candidate for higher API limits, allowlists, or priority treatment with periodic reevaluation."
-          : "Keep the wallet in lower-trust flows until its operating history becomes stronger.",
+        score.riskLevel === "low"
+          ? "Suitable for higher-trust flows with monitoring."
+          : score.riskLevel === "medium"
+            ? "Use for monitored or rate-limited flows until history deepens."
+            : "Keep in restricted flows until behavior broadens and history strengthens.",
     },
     {
-      title: "Operational footprint",
-      body: `Observed ${metrics.uniqueCounterparties} counterparties across ${metrics.uniqueActiveDays} active days.`,
+      title: "Behavior pattern",
+      body: `Observed pattern is ${wallet.contractInteractions.pattern} with ${wallet.contractInteractions.totalContractCalls} contract-oriented interactions.`,
     },
     {
-      title: "Treasury posture",
-      body: `Visible portfolio value is ${metrics.totalPortfolioUsd.toFixed(2)} USD with ${Math.round(
-        metrics.stablecoinShare * 100,
-      )}% stablecoin exposure.`,
+      title: "Data confidence",
+      body: score.uncertaintyNote ?? "Current wallet data appears sufficient for a basic deterministic read.",
     },
   ];
 }

@@ -162,8 +162,8 @@ export default function HomePage() {
             <>
               <div className="score-row">
                 <div>
-                  <div className="score-band">{freeReport.score.band}</div>
-                  <div className="score-value">{freeReport.score.value}</div>
+                  <div className="score-band">{freeReport.score.riskLevel} risk</div>
+                  <div className="score-value">{freeReport.score.totalScore}</div>
                 </div>
                 <div>
                   <h3>{freeReport.summary.headline}</h3>
@@ -206,6 +206,12 @@ export default function HomePage() {
                     <small>{bullet}</small>
                   </div>
                 ))}
+                {freeReport.summary.uncertaintyNote ? (
+                  <div className="signal neutral">
+                    <strong>Uncertainty note</strong>
+                    <small>{freeReport.summary.uncertaintyNote}</small>
+                  </div>
+                ) : null}
               </div>
             </>
           ) : (
@@ -260,7 +266,7 @@ export default function HomePage() {
               {freeReport?.score.signals.map((signal) => (
                 <div className={`signal ${signal.impact}`} key={signal.id}>
                   <strong>
-                    {signal.title} {signal.weight > 0 ? `+${signal.weight}` : signal.weight}
+                    {signal.title} -{signal.weight}
                   </strong>
                   <small>{signal.explanation}</small>
                 </div>
