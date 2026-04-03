@@ -1,24 +1,29 @@
-import { buildWalletReport } from "@/lib/reports/build-report";
+import { env, resolveRuntimeMode } from "@/config/env";
 import { parseReportRequest } from "@/lib/validation";
+import { generateWalletReport } from "@/reports/generate-report";
+import { FreeReportResponse } from "@/types/api";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const reportRequest = parseReportRequest(body);
-    const report = await buildWalletReport(reportRequest);
+    const report = await generateWalletReport(reportRequest);
 
-    return NextResponse.json({
+    return NextResponse.json<FreeReportResponse>({
+      mode: resolveRuntimeMode(env.alliumMode),
       report: {
-        request: report.request,
+        wallet: report.wallet,
         generatedAt: report.generatedAt,
         summary: report.summary,
         score: report.score,
-        metrics: report.metrics,
       },
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to generate free report.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json<FreeReportResponse>(
+      { mode: resolveRuntimeMode(env.alliumMode), error: message },
+      { status: 400 },
+    );
   }
 }

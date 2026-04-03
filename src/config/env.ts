@@ -1,4 +1,6 @@
-import { SupportedChain } from "@/types/report";
+import { SupportedChain } from "@/types/domain";
+
+type RuntimeMode = "mock" | "real";
 
 function readEnv(name: string, fallback?: string): string {
   const value = process.env[name] ?? fallback;
@@ -26,7 +28,22 @@ function readOptionalNumber(name: string, fallback: number): number {
   return value;
 }
 
+function readMode(name: string, fallback: RuntimeMode): RuntimeMode {
+  const value = process.env[name] ?? fallback;
+
+  if (value !== "mock" && value !== "real") {
+    throw new Error(`Environment variable ${name} must be "mock" or "real"`);
+  }
+
+  return value;
+}
+
 export const env = {
+  appMode: readMode("APP_MODE", "mock"),
+  alliumMode: readMode("ALLIUM_MODE", "mock"),
+  owsMode: readMode("OWS_MODE", "mock"),
+  x402Mode: readMode("X402_MODE", "mock"),
+  moonPayMode: readMode("MOONPAY_MODE", "mock"),
   alliumApiKey: process.env.ALLIUM_API_KEY ?? "",
   alliumBaseUrl: process.env.ALLIUM_BASE_URL ?? "https://api.allium.so",
   reportChain: (process.env.REPORT_CHAIN ?? "base") as SupportedChain,
@@ -40,6 +57,7 @@ export const env = {
   x402Description: process.env.X402_DESCRIPTION ?? "Full wallet reputation report",
   moonpayDefaultFiat: process.env.MOONPAY_DEFAULT_FIAT ?? "USD",
   moonpayDefaultAmount: readOptionalNumber("MOONPAY_DEFAULT_AMOUNT", 10),
+  demoPaidHeaderValue: process.env.DEMO_PAID_HEADER_VALUE ?? "paid",
 };
 
 export function assertAlliumConfigured(): void {
@@ -50,4 +68,8 @@ export function assertAlliumConfigured(): void {
 
 export function requireServiceAddress(): string {
   return readEnv("OWS_SERVICE_ADDRESS");
+}
+
+export function resolveRuntimeMode(mode: RuntimeMode): "mock" | "real" {
+  return env.appMode === "mock" ? "mock" : mode;
 }

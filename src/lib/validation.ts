@@ -1,5 +1,6 @@
 import { isValidEvmAddress, normalizeAddress } from "@/lib/address";
-import { SupportedChain, WalletReportRequest } from "@/types/report";
+import { WalletLookupRequest } from "@/types/api";
+import { SupportedChain } from "@/types/domain";
 import { z } from "zod";
 
 const reportRequestSchema = z.object({
@@ -7,7 +8,7 @@ const reportRequestSchema = z.object({
   chain: z.enum(["base", "ethereum"]).default("base"),
 });
 
-export function parseReportRequest(input: unknown): WalletReportRequest {
+export function parseReportRequest(input: unknown): WalletLookupRequest {
   const parsed = reportRequestSchema.parse(input);
 
   if (!isValidEvmAddress(parsed.address)) {
