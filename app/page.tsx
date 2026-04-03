@@ -127,6 +127,13 @@ export default function HomePage() {
         throw new Error(data.error ?? "Unable to start payment.");
       }
 
+      setPaywall((current) => ({
+        ...current,
+        mode: data.mode ?? current?.mode ?? "mock",
+        owsService: data.owsService,
+        owsWorkflow: data.owsWorkflow,
+        moonpay: data.moonpay,
+      }));
       setUnlockSessionId(data.session.sessionId);
       setPaymentState(data.session.state);
       setPaymentMessage(data.session.message || COPY.pending);
@@ -160,6 +167,13 @@ export default function HomePage() {
         throw new Error(data.error ?? "Unable to verify payment.");
       }
 
+      setPaywall((current) => ({
+        ...current,
+        mode: data.mode ?? current?.mode ?? "mock",
+        owsService: data.owsService,
+        owsWorkflow: data.owsWorkflow,
+        moonpay: data.moonpay,
+      }));
       setPaymentState(data.session.state);
       setPaymentMessage(data.session.message);
 
@@ -236,7 +250,7 @@ export default function HomePage() {
           <div className="signal-list">
             <div className="signal neutral">
               <strong>{COPY.unlockCta}</strong>
-              <small>The user starts a paid unlock session for the premium report.</small>
+              <small>The user starts a paid unlock session where the report provider is identified by an OWS-managed service wallet.</small>
             </div>
             <div className="signal neutral">
               <strong>Payment pending</strong>
@@ -343,7 +357,7 @@ export default function HomePage() {
               <div className="locked-card">
                 <div className="locked-badge">Locked</div>
                 <h3>Pay per report unlock</h3>
-                <p>The full report stays locked until payment verification succeeds.</p>
+                <p>The full report stays locked until payment verification succeeds. Payment routes to the report provider's OWS service wallet.</p>
               </div>
 
               <div className="button-row">
@@ -384,6 +398,15 @@ export default function HomePage() {
                       <small>{requirement.description}</small>
                     </div>
                   ))}
+                </div>
+              ) : null}
+
+              {paywall?.owsService ? (
+                <div className="signal neutral">
+                  <strong>OWS service wallet</strong>
+                  <small>
+                    {paywall.owsService.walletName} receives payment on {paywall.owsService.chain} at {paywall.owsService.address}
+                  </small>
                 </div>
               ) : null}
             </>
@@ -455,27 +478,75 @@ export default function HomePage() {
         <section className="grid">
           <div className="panel">
             <h2>OWS payment workflow</h2>
-            <div className="command-list">
-              {paywall?.owsCommands?.map((command) => (
-                <div className="command" key={command}>
-                  <code>{command}</code>
+            <p className="subtle">
+              OWS CLI is part of the unlock path: the provider identity is an OWS wallet, and the buyer wallet can pay for the premium report through OWS.
+            </p>
+            {paywall?.owsWorkflow ? (
+              <>
+                <h3>Service wallet setup</h3>
+                <div className="command-list">
+                  {paywall.owsWorkflow.setupCommands.map((command) => (
+                    <div className="command" key={command}>
+                      <code>{command}</code>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+
+                <h3>Buyer unlock flow</h3>
+                <div className="command-list">
+                  {paywall.owsWorkflow.unlockCommands.map((command) => (
+                    <div className="command" key={command}>
+                      <code>{command}</code>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="signal neutral">
+                  <small>{paywall.owsWorkflow.note}</small>
+                </div>
+              </>
+            ) : (
+              <div className="command-list">
+                {paywall?.owsCommands?.map((command) => (
+                  <div className="command" key={command}>
+                    <code>{command}</code>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="panel">
-            <h2>MoonPay funding workflow</h2>
-            <p>
-              <strong>{paywall?.moonpay?.skillName}</strong>: {paywall?.moonpay?.description}
+            <h2>MoonPay top-up to unlock</h2>
+            <p className="subtle">
+              If the buyer wallet does not have enough USDC to unlock the report, MoonPay funds that same buyer wallet before payment is retried.
             </p>
-            <div className="command-list">
-              {paywall?.moonpay?.commands.map((command) => (
-                <div className="command" key={command}>
-                  <code>{command}</code>
+            {paywall?.moonpay ? (
+              <>
+                <p>
+                  <strong>{paywall.moonpay.skillName}</strong>: {paywall.moonpay.description}
+                </p>
+                <div className="signal neutral">
+                  <small>
+                    Availability: {paywall.moonpay.available ? "enabled" : "fallback mode"} | Asset:{" "}
+                    {paywall.moonpay.targetAsset ?? "USDC"} | Suggested amount:{" "}
+                    {paywall.moonpay.suggestedAmount ?? "custom"}
+                  </small>
                 </div>
-              ))}
-            </div>
+                <div className="command-list">
+                  {paywall.moonpay.commands.map((command) => (
+                    <div className="command" key={command}>
+                      <code>{command}</code>
+                    </div>
+                  ))}
+                </div>
+                {paywall.moonpay.fallbackMessage ? (
+                  <div className="signal neutral">
+                    <small>{paywall.moonpay.fallbackMessage}</small>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
           </div>
         </section>
       ) : null}

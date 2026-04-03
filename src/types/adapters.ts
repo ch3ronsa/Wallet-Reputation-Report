@@ -12,9 +12,16 @@ export interface OwsServiceIdentity {
   chain: SupportedChain;
 }
 
+export interface OwsCliWorkflow {
+  setupCommands: string[];
+  unlockCommands: string[];
+  note: string;
+}
+
 export interface OwsAdapter {
   getServiceIdentity(): Promise<OwsServiceIdentity>;
   buildBuyerCommands(request: WalletLookupRequest): Promise<string[]>;
+  buildCliWorkflow(input: { reportRequest: WalletLookupRequest; serviceIdentity: OwsServiceIdentity }): Promise<OwsCliWorkflow>;
 }
 
 export interface PaymentAccessResult {
@@ -35,8 +42,13 @@ export interface X402PaymentGate {
 }
 
 export interface MoonPayFundingPlan {
+  available: boolean;
   skillName: string;
   description: string;
+  targetWalletAddress?: string;
+  targetAsset?: string;
+  suggestedAmount?: number;
+  fallbackMessage?: string;
   commands: string[];
 }
 

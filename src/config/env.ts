@@ -69,6 +69,7 @@ export const env = {
   x402UnlockTtlMs: readOptionalNumber("X402_UNLOCK_TTL_MS", 3_600_000),
   x402MockAutoApprove: readOptionalBoolean("X402_MOCK_AUTO_APPROVE", true),
   x402MockSettleMs: readOptionalNumber("X402_MOCK_SETTLE_MS", 2000),
+  moonPayEnabled: readOptionalBoolean("MOONPAY_ENABLED", true),
   moonpayDefaultFiat: process.env.MOONPAY_DEFAULT_FIAT ?? "USD",
   moonpayDefaultAmount: readOptionalNumber("MOONPAY_DEFAULT_AMOUNT", 10),
   demoPaidHeaderValue: process.env.DEMO_PAID_HEADER_VALUE ?? "paid",

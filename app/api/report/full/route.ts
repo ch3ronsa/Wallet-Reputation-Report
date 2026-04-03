@@ -20,8 +20,12 @@ export async function POST(request: NextRequest) {
       const requirements = access.requirements ?? [];
       const serviceIdentity = await owsAdapter.getServiceIdentity();
       const owsCommands = await owsAdapter.buildBuyerCommands(reportRequest);
+      const owsWorkflow = await owsAdapter.buildCliWorkflow({
+        reportRequest,
+        serviceIdentity,
+      });
       const moonPayPlan = await moonPayAdapter.getFundingPlan({
-        walletAddress: serviceIdentity.address,
+        walletAddress: undefined,
         chain: reportRequest.chain,
       });
 
@@ -32,6 +36,8 @@ export async function POST(request: NextRequest) {
           error: "Payment required for premium report.",
           requirements,
           owsCommands,
+          owsService: serviceIdentity,
+          owsWorkflow,
           moonpay: moonPayPlan,
         },
         {

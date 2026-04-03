@@ -19,4 +19,21 @@ export class MockOwsAdapter implements OwsAdapter {
       )}'`,
     ];
   }
+
+  async buildCliWorkflow(input: { reportRequest: WalletLookupRequest; serviceIdentity: OwsServiceIdentity }) {
+    return {
+      setupCommands: [
+        'ows wallet create --name "wallet-reputation-report"',
+        "ows wallet info",
+      ],
+      unlockCommands: [
+        'ows wallet create --name "report-buyer"',
+        'ows fund deposit --wallet "report-buyer" --chain base --token USDC',
+        `ows pay request http://localhost:3000/api/report/full --wallet "report-buyer" --method POST --body '${JSON.stringify(
+          input.reportRequest,
+        )}'`,
+      ],
+      note: `OWS manages the service wallet identity (${input.serviceIdentity.address}) and the buyer wallet used to unlock reports.`,
+    };
+  }
 }

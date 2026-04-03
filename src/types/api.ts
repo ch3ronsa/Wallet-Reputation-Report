@@ -29,6 +29,29 @@ export interface UnlockSession {
   failureReason?: string;
 }
 
+export interface OwsServiceIdentityResponse {
+  walletName: string;
+  address: string;
+  chain: SupportedChain;
+}
+
+export interface OwsCliWorkflowResponse {
+  setupCommands: string[];
+  unlockCommands: string[];
+  note: string;
+}
+
+export interface MoonPayTopUpResponse {
+  available: boolean;
+  skillName: string;
+  description: string;
+  targetWalletAddress?: string;
+  targetAsset?: string;
+  suggestedAmount?: number;
+  fallbackMessage?: string;
+  commands: string[];
+}
+
 export interface FreeReportResponse {
   mode: "mock" | "real";
   report?: FreeSummary;
@@ -40,11 +63,9 @@ export interface FullReportResponse {
   report?: FullReport;
   requirements?: X402PaymentRequirement[];
   owsCommands?: string[];
-  moonpay?: {
-    skillName: string;
-    description: string;
-    commands: string[];
-  };
+  owsService?: OwsServiceIdentityResponse;
+  owsWorkflow?: OwsCliWorkflowResponse;
+  moonpay?: MoonPayTopUpResponse;
   paymentState?: PaymentState;
   error?: string;
 }
@@ -56,5 +77,8 @@ export interface UnlockReportRequest extends WalletLookupRequest {
 export interface UnlockReportResponse {
   mode: "mock" | "real";
   session?: UnlockSession;
+  owsService?: OwsServiceIdentityResponse;
+  owsWorkflow?: OwsCliWorkflowResponse;
+  moonpay?: MoonPayTopUpResponse;
   error?: string;
 }

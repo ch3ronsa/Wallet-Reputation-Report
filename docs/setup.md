@@ -22,6 +22,12 @@ ows pay request http://localhost:3000/api/report/full \
   --body '{"address":"0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045","chain":"base"}'
 ```
 
+This is meaningful in-product now:
+
+- the report provider exposes an OWS-managed service wallet as payment identity
+- the buyer can use OWS CLI to create a wallet and pay to unlock a premium report
+- if the buyer wallet lacks funds, MoonPay is the natural top-up path before retrying unlock
+
 ## MoonPay CLI fallback
 
 If your environment exposes MoonPay CLI instead of an agent-skill runtime:
