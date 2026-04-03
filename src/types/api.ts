@@ -1,15 +1,8 @@
-import { FullReport, ReportSummary, ReputationScore, SupportedChain, WalletProfile } from "@/types/domain";
+import { FreeSummary, FullReport, SupportedChain } from "@/types/domain";
 
 export interface WalletLookupRequest {
   address: string;
   chain: SupportedChain;
-}
-
-export interface FreeReportPayload {
-  wallet: WalletProfile;
-  summary: ReportSummary;
-  score: ReputationScore;
-  generatedAt: string;
 }
 
 export interface X402PaymentRequirement {
@@ -24,7 +17,7 @@ export interface X402PaymentRequirement {
 
 export interface FreeReportResponse {
   mode: "mock" | "real";
-  report?: FreeReportPayload;
+  report?: FreeSummary;
   error?: string;
 }
 

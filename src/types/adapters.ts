@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { FullReport, SupportedChain, WalletProfile } from "@/types/domain";
+import { GeneratedReportBundle, SupportedChain, WalletProfile } from "@/types/domain";
 import { WalletLookupRequest, X402PaymentRequirement } from "@/types/api";
 
 export interface AlliumClient {
@@ -38,5 +38,5 @@ export interface MoonPayAdapter {
 }
 
 export interface ReportGenerator {
-  generate(request: WalletLookupRequest): Promise<FullReport>;
+  generate(request: WalletLookupRequest): Promise<GeneratedReportBundle>;
 }

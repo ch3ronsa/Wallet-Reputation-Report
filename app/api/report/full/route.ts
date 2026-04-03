@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json<FullReportResponse>({
       mode: report.wallet.dataSource === "allium" ? "real" : "mock",
-      report,
+      report: report.fullReport,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to generate premium report.";

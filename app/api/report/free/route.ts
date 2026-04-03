@@ -11,12 +11,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json<FreeReportResponse>({
       mode: report.wallet.dataSource === "allium" ? "real" : "mock",
-      report: {
-        wallet: report.wallet,
-        generatedAt: report.generatedAt,
-        summary: report.summary,
-        score: report.score,
-      },
+      report: report.freeSummary,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to generate free report.";

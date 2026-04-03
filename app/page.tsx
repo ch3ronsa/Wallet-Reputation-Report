@@ -90,21 +90,21 @@ export default function HomePage() {
       <section className="hero">
         <h1>Wallet Reputation Report</h1>
         <p>
-          Fast, deterministic wallet intelligence for OpenWallet hackathon demos. Run in mock mode immediately, then
-          switch adapters to real Allium, OWS, MoonPay, and x402 flows when credentials are ready.
+          Deterministic, monetizable wallet intelligence. The free tier gives a short risk read; the paid report turns
+          the same profile into an operator-ready decision document.
         </p>
         <div className="hero-badges">
-          <span className="badge">Next.js + TypeScript</span>
-          <span className="badge">App Router</span>
-          <span className="badge">Mock/real adapters</span>
+          <span className="badge">Allium-backed profile</span>
           <span className="badge">Deterministic scoring</span>
+          <span className="badge">Free summary</span>
+          <span className="badge">Premium report</span>
         </div>
       </section>
 
       <section className="grid">
         <div className="panel">
-          <h2>Check a wallet</h2>
-          <p>Paste an EVM address to generate a free summary now and preview the locked premium report flow.</p>
+          <h2>Generate a report</h2>
+          <p>Paste a wallet address to get a short free read first, then unlock the structured full report.</p>
           <form onSubmit={handleGenerateSummary}>
             <label className="field-label" htmlFor="wallet-address">
               Wallet address
@@ -116,10 +116,9 @@ export default function HomePage() {
               onChange={(event) => setAddress(event.target.value)}
               placeholder="0x..."
             />
-
             <div className="button-row">
               <button className="button button-primary" type="submit" disabled={loadingFree}>
-                {loadingFree ? "Generating..." : "Generate summary"}
+                {loadingFree ? "Generating..." : "Generate free summary"}
               </button>
               <button
                 className="button button-secondary"
@@ -127,29 +126,27 @@ export default function HomePage() {
                 onClick={handleUnlockAttempt}
                 disabled={loadingFull}
               >
-                {loadingFull ? "Checking paywall..." : "View full report"}
+                {loadingFull ? "Checking paywall..." : "Unlock full report"}
               </button>
             </div>
           </form>
-
           {error ? <div className="error-note">{error}</div> : null}
         </div>
 
         <div className="panel">
-          <h2>How this scaffold works</h2>
-          <p>Mock mode is the default so the app runs immediately. Real mode stays adapter-driven and isolated.</p>
+          <h2>What changes between free and paid</h2>
           <div className="signal-list">
             <div className="signal neutral">
-              <strong>Allium adapter</strong>
-              <small>Supplies the wallet profile in mock mode or real API mode.</small>
+              <strong>Free summary</strong>
+              <small>Address, chain, overall risk level, three key reasons, and a quick snapshot.</small>
             </div>
             <div className="signal neutral">
-              <strong>Scoring engine</strong>
-              <small>Produces the reputation score deterministically from typed wallet metrics.</small>
+              <strong>Full report</strong>
+              <small>Score breakdown, counterparties, concentration, activity observations, limitations, and interpretation.</small>
             </div>
             <div className="signal neutral">
-              <strong>x402 + OWS + MoonPay</strong>
-              <small>Keep the premium report locked until payment, while exposing operator-safe commands.</small>
+              <strong>Rules</strong>
+              <small>Facts stay in fact sections. Interpretation stays in interpretation sections.</small>
             </div>
           </div>
         </div>
@@ -157,87 +154,95 @@ export default function HomePage() {
 
       <section className="grid">
         <div className="panel report-card">
-          <h2>Summary card</h2>
+          <h2>Free summary</h2>
           {freeReport ? (
             <>
               <div className="score-row">
                 <div>
-                  <div className="score-band">{freeReport.score.riskLevel} risk</div>
-                  <div className="score-value">{freeReport.score.totalScore}</div>
+                  <div className="score-band">{freeReport.overallRiskLevel} risk</div>
+                  <div className="score-value">
+                    {freeReport.quickSnapshot.visiblePortfolioUsd > 0
+                      ? `$${freeReport.quickSnapshot.visiblePortfolioUsd.toFixed(0)}`
+                      : "Profile"}
+                  </div>
                 </div>
                 <div>
-                  <h3>{freeReport.summary.headline}</h3>
-                  <p>{freeReport.summary.verdict}</p>
+                  <h3>{freeReport.walletAddress}</h3>
+                  <p>
+                    Chain: {freeReport.chain} | Overall risk: {freeReport.overallRiskLevel}
+                  </p>
                 </div>
               </div>
 
               <div className="metric-grid">
                 <div className="metric">
-                  <span>Transactions</span>
-                  <strong>{freeReport.wallet.metrics.txCount}</strong>
-                </div>
-                <div className="metric">
-                  <span>Portfolio value</span>
-                  <strong>${freeReport.wallet.metrics.totalPortfolioUsd.toFixed(2)}</strong>
-                </div>
-                <div className="metric">
-                  <span>Active days</span>
-                  <strong>{freeReport.wallet.metrics.uniqueActiveDays}</strong>
-                </div>
-                <div className="metric">
-                  <span>Counterparties</span>
-                  <strong>{freeReport.wallet.metrics.uniqueCounterparties}</strong>
-                </div>
-                <div className="metric">
                   <span>Wallet age</span>
                   <strong>
-                    {freeReport.wallet.age.walletAgeDays !== null ? `${freeReport.wallet.age.walletAgeDays}d` : "Unknown"}
+                    {freeReport.quickSnapshot.walletAgeDays !== null
+                      ? `${freeReport.quickSnapshot.walletAgeDays}d`
+                      : "Unknown"}
                   </strong>
                 </div>
                 <div className="metric">
-                  <span>Recent 7d tx</span>
-                  <strong>{freeReport.wallet.activity.recentTxCount7d}</strong>
+                  <span>Transactions</span>
+                  <strong>{freeReport.quickSnapshot.transactionCount}</strong>
+                </div>
+                <div className="metric">
+                  <span>Active days</span>
+                  <strong>{freeReport.quickSnapshot.activeDays}</strong>
+                </div>
+                <div className="metric">
+                  <span>Counterparties</span>
+                  <strong>{freeReport.quickSnapshot.uniqueCounterparties}</strong>
                 </div>
               </div>
 
               <div className="signal-list">
-                {freeReport.summary.bullets.map((bullet) => (
-                  <div className="signal neutral" key={bullet}>
-                    <small>{bullet}</small>
+                {freeReport.keyReasons.map((reason) => (
+                  <div className="signal neutral" key={reason}>
+                    <small>{reason}</small>
                   </div>
                 ))}
-                {freeReport.summary.uncertaintyNote ? (
+                {freeReport.uncertaintyNote ? (
                   <div className="signal neutral">
                     <strong>Uncertainty note</strong>
-                    <small>{freeReport.summary.uncertaintyNote}</small>
+                    <small>{freeReport.uncertaintyNote}</small>
                   </div>
                 ) : null}
               </div>
             </>
           ) : (
-            <p className="subtle">Generate a summary to populate this card with wallet-level reputation signals.</p>
+            <p className="subtle">Generate a summary to fill this card with a short, operator-friendly wallet read.</p>
           )}
         </div>
 
         <div className="panel report-card">
-          <h2>Locked full report card</h2>
+          <h2>Locked full report</h2>
           {fullReport ? (
-            <div className="signal-list">
-              {fullReport.premiumInsights.map((insight) => (
-                <div className="signal positive" key={insight.title}>
-                  <strong>{insight.title}</strong>
-                  <small>{insight.body}</small>
+            <>
+              <div className="signal-list">
+                <div className="signal neutral">
+                  <strong>Interpretation</strong>
+                  <small>{fullReport.interpretation.plainLanguage}</small>
                 </div>
-              ))}
-            </div>
+                <div className="signal neutral">
+                  <strong>Trust posture</strong>
+                  <small>{fullReport.interpretation.trustPosture}</small>
+                </div>
+                <div className="signal neutral">
+                  <strong>Commercial note</strong>
+                  <small>{fullReport.interpretation.monetizationNote}</small>
+                </div>
+              </div>
+            </>
           ) : (
             <>
               <div className="locked-card">
                 <div className="locked-badge">Premium</div>
-                <h3>Underwriting details, premium signals, and monetized delivery</h3>
+                <h3>Facts, interpretation, and a monetizable decision layer</h3>
                 <p>
-                  This card stays locked until the full report route clears the x402 payment gate. In mock mode, the
-                  API returns a realistic `402 Payment Required` response.
+                  The paid report is designed to feel operationally useful: clearly structured, easy to scan, and
+                  suitable for underwriting-style decisions.
                 </p>
               </div>
 
@@ -258,12 +263,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {(freeReport?.score.signals.length || paywall?.owsCommands || paywall?.moonpay) && (
+      {fullReport ? (
         <section className="grid">
           <div className="panel">
-            <h2>Risk signals</h2>
+            <h2>Score breakdown</h2>
             <div className="signal-list">
-              {freeReport?.score.signals.map((signal) => (
+              {fullReport.scoreBreakdown.signals.map((signal) => (
                 <div className={`signal ${signal.impact}`} key={signal.id}>
                   <strong>
                     {signal.title} -{signal.weight}
@@ -275,56 +280,77 @@ export default function HomePage() {
           </div>
 
           <div className="panel">
-            <h2>Adapter guidance</h2>
-            {freeReport?.wallet.topCounterparties.length ? (
-              <>
-                <h3>Top counterparties</h3>
-                <div className="signal-list">
-                  {freeReport.wallet.topCounterparties.map((counterparty) => (
-                    <div className="signal neutral" key={counterparty.address}>
-                      <strong>{counterparty.address}</strong>
-                      <small>
-                        {counterparty.interactions} interactions, {counterparty.direction} flow
-                      </small>
-                    </div>
-                  ))}
+            <h2>Facts</h2>
+            <h3>Notable counterparties</h3>
+            <div className="signal-list">
+              {fullReport.facts.notableCounterparties.map((counterparty) => (
+                <div className="signal neutral" key={counterparty.address}>
+                  <strong>{counterparty.address}</strong>
+                  <small>
+                    {counterparty.interactions} interactions, {counterparty.direction} flow
+                  </small>
                 </div>
-              </>
-            ) : null}
+              ))}
+            </div>
 
-            {paywall?.owsCommands ? (
-              <>
-                <h3>OWS commands</h3>
-                <div className="command-list">
-                  {paywall.owsCommands.map((command) => (
-                    <div className="command" key={command}>
-                      <code>{command}</code>
-                    </div>
-                  ))}
+            <h3>Concentration observations</h3>
+            <div className="signal-list">
+              {fullReport.facts.concentrationObservations.map((item) => (
+                <div className="signal neutral" key={item}>
+                  <small>{item}</small>
                 </div>
-              </>
-            ) : (
-              <p className="subtle">Attempt the full report to preview OWS and payment guidance here.</p>
-            )}
+              ))}
+            </div>
 
-            {paywall?.moonpay ? (
-              <>
-                <h3>MoonPay</h3>
-                <p>
-                  <strong>{paywall.moonpay.skillName}</strong>: {paywall.moonpay.description}
-                </p>
-                <div className="command-list">
-                  {paywall.moonpay.commands.map((command) => (
-                    <div className="command" key={command}>
-                      <code>{command}</code>
-                    </div>
-                  ))}
+            <h3>Activity observations</h3>
+            <div className="signal-list">
+              {fullReport.facts.activityObservations.map((item) => (
+                <div className="signal neutral" key={item}>
+                  <small>{item}</small>
                 </div>
-              </>
-            ) : null}
+              ))}
+            </div>
+
+            <h3>Limitations and unknowns</h3>
+            <div className="signal-list">
+              {fullReport.facts.limitations.map((item) => (
+                <div className="signal neutral" key={item}>
+                  <small>{item}</small>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
-      )}
+      ) : null}
+
+      {!fullReport && (paywall?.owsCommands || paywall?.moonpay) ? (
+        <section className="grid">
+          <div className="panel">
+            <h2>OWS commands</h2>
+            <div className="command-list">
+              {paywall?.owsCommands?.map((command) => (
+                <div className="command" key={command}>
+                  <code>{command}</code>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            <h2>MoonPay</h2>
+            <p>
+              <strong>{paywall?.moonpay?.skillName}</strong>: {paywall?.moonpay?.description}
+            </p>
+            <div className="command-list">
+              {paywall?.moonpay?.commands.map((command) => (
+                <div className="command" key={command}>
+                  <code>{command}</code>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

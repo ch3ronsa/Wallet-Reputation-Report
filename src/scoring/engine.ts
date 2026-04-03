@@ -1,7 +1,5 @@
 import { SCORE_BASE, SCORE_THRESHOLDS, SIGNAL_WEIGHTS } from "@/scoring/model";
 import {
-  PremiumInsight,
-  ReportSummary,
   ReputationScore,
   RiskLevel,
   RiskSignal,
@@ -262,47 +260,4 @@ export function scoreWallet(wallet: WalletProfile): ReputationScore {
         : ["No major deterministic risk signals fired from the currently available wallet data."],
     uncertaintyNote,
   };
-}
-
-export function buildReportSummary(score: ReputationScore, wallet: WalletProfile): ReportSummary {
-  const headlineByRiskLevel: Record<RiskLevel, string> = {
-    low: "Low-risk wallet profile",
-    medium: "Medium-risk wallet profile",
-    high: "High-risk wallet profile",
-  };
-
-  const verdictByRiskLevel: Record<RiskLevel, string> = {
-    low: "The wallet looks relatively stable based on the currently observable deterministic signals.",
-    medium: "The wallet shows mixed indicators and should be reviewed before trust-sensitive use cases.",
-    high: "The wallet triggers multiple risk signals and should stay in lower-trust flows.",
-  };
-
-  return {
-    headline: headlineByRiskLevel[score.riskLevel],
-    verdict: `${verdictByRiskLevel[score.riskLevel]} Score: ${score.totalScore}/100.`,
-    bullets: score.summaryReasons,
-    uncertaintyNote: score.uncertaintyNote,
-  };
-}
-
-export function buildPremiumInsights(wallet: WalletProfile, score: ReputationScore): PremiumInsight[] {
-  return [
-    {
-      title: "Risk posture",
-      body:
-        score.riskLevel === "low"
-          ? "Suitable for higher-trust flows with monitoring."
-          : score.riskLevel === "medium"
-            ? "Use for monitored or rate-limited flows until history deepens."
-            : "Keep in restricted flows until behavior broadens and history strengthens.",
-    },
-    {
-      title: "Behavior pattern",
-      body: `Observed pattern is ${wallet.contractInteractions.pattern} with ${wallet.contractInteractions.totalContractCalls} contract-oriented interactions.`,
-    },
-    {
-      title: "Data confidence",
-      body: score.uncertaintyNote ?? "Current wallet data appears sufficient for a basic deterministic read.",
-    },
-  ];
 }

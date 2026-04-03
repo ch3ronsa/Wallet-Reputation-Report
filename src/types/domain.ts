@@ -151,22 +151,58 @@ export interface ReputationScore {
   uncertaintyNote: string | null;
 }
 
-export interface ReportSummary {
-  headline: string;
-  verdict: string;
-  bullets: string[];
+export interface QuickWalletSnapshot {
+  walletAgeDays: number | null;
+  transactionCount: number;
+  activeDays: number;
+  uniqueCounterparties: number;
+  visiblePortfolioUsd: number;
+  recentTxCount7d: number;
+  dominantAssetShare: number | null;
+}
+
+export interface FreeSummary {
+  walletAddress: string;
+  chain: SupportedChain;
+  overallRiskLevel: RiskLevel;
+  keyReasons: string[];
+  quickSnapshot: QuickWalletSnapshot;
   uncertaintyNote: string | null;
 }
 
-export interface PremiumInsight {
-  title: string;
-  body: string;
+export interface ScoreBreakdown {
+  totalScore: number;
+  riskLevel: RiskLevel;
+  signals: RiskSignal[];
+}
+
+export interface FullReportFacts {
+  notableCounterparties: CounterpartySummary[];
+  concentrationObservations: string[];
+  activityObservations: string[];
+  limitations: string[];
+}
+
+export interface FullReportInterpretation {
+  plainLanguage: string;
+  trustPosture: string;
+  monetizationNote: string;
 }
 
 export interface FullReport {
+  walletAddress: string;
+  chain: SupportedChain;
+  generatedAt: string;
+  freeSummary: FreeSummary;
+  scoreBreakdown: ScoreBreakdown;
+  facts: FullReportFacts;
+  interpretation: FullReportInterpretation;
+}
+
+export interface GeneratedReportBundle {
   wallet: WalletProfile;
   score: ReputationScore;
-  summary: ReportSummary;
-  premiumInsights: PremiumInsight[];
+  freeSummary: FreeSummary;
+  fullReport: FullReport;
   generatedAt: string;
 }
