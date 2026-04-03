@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { GeneratedReportBundle, SupportedChain, WalletProfile } from "@/types/domain";
-import { WalletLookupRequest, X402PaymentRequirement } from "@/types/api";
+import { UnlockSession, WalletLookupRequest, X402PaymentRequirement } from "@/types/api";
 
 export interface AlliumClient {
   getWalletProfile(request: WalletLookupRequest): Promise<WalletProfile>;
@@ -20,10 +20,17 @@ export interface OwsAdapter {
 export interface PaymentAccessResult {
   paid: boolean;
   requirements?: X402PaymentRequirement[];
+  unlockToken?: string;
 }
 
 export interface X402PaymentGate {
   checkAccess(input: { request: NextRequest; reportRequest: WalletLookupRequest }): Promise<PaymentAccessResult>;
+  createUnlockSession(input: { reportRequest: WalletLookupRequest }): Promise<UnlockSession>;
+  verifyUnlockSession(input: {
+    request: NextRequest;
+    reportRequest: WalletLookupRequest;
+    sessionId: string;
+  }): Promise<UnlockSession>;
   encodePaymentRequiredHeader(requirements: X402PaymentRequirement[]): string;
 }
 

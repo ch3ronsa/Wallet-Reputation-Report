@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json<FullReportResponse>(
         {
           mode: resolveRuntimeMode(env.x402Mode),
+          paymentState: "locked",
           error: "Payment required for premium report.",
           requirements,
           owsCommands,
@@ -46,6 +47,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json<FullReportResponse>({
       mode: report.wallet.dataSource === "allium" ? "real" : "mock",
+      paymentState: "paid",
       report: report.fullReport,
     });
   } catch (error) {

@@ -28,6 +28,16 @@ function readOptionalNumber(name: string, fallback: number): number {
   return value;
 }
 
+function readOptionalBoolean(name: string, fallback: boolean): boolean {
+  const raw = process.env[name];
+
+  if (!raw) {
+    return fallback;
+  }
+
+  return raw === "true";
+}
+
 function readMode(name: string, fallback: RuntimeMode): RuntimeMode {
   const value = process.env[name] ?? fallback;
 
@@ -55,6 +65,10 @@ export const env = {
   x402Network: (process.env.X402_NETWORK ?? "base") as SupportedChain,
   x402Asset: process.env.X402_ASSET ?? "USDC",
   x402Description: process.env.X402_DESCRIPTION ?? "Full wallet reputation report",
+  x402UnlockSecret: process.env.X402_UNLOCK_SECRET ?? "wallet-reputation-report-dev-secret",
+  x402UnlockTtlMs: readOptionalNumber("X402_UNLOCK_TTL_MS", 3_600_000),
+  x402MockAutoApprove: readOptionalBoolean("X402_MOCK_AUTO_APPROVE", true),
+  x402MockSettleMs: readOptionalNumber("X402_MOCK_SETTLE_MS", 2000),
   moonpayDefaultFiat: process.env.MOONPAY_DEFAULT_FIAT ?? "USD",
   moonpayDefaultAmount: readOptionalNumber("MOONPAY_DEFAULT_AMOUNT", 10),
   demoPaidHeaderValue: process.env.DEMO_PAID_HEADER_VALUE ?? "paid",

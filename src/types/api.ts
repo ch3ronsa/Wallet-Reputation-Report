@@ -15,6 +15,20 @@ export interface X402PaymentRequirement {
   resource: string;
 }
 
+export type PaymentState = "locked" | "pending" | "paid" | "failed";
+
+export interface UnlockSession {
+  sessionId: string;
+  state: PaymentState;
+  requirements: X402PaymentRequirement[];
+  checkoutUrl?: string;
+  verifyAfterMs?: number;
+  ctaLabel: string;
+  message: string;
+  unlockToken?: string;
+  failureReason?: string;
+}
+
 export interface FreeReportResponse {
   mode: "mock" | "real";
   report?: FreeSummary;
@@ -31,5 +45,16 @@ export interface FullReportResponse {
     description: string;
     commands: string[];
   };
+  paymentState?: PaymentState;
+  error?: string;
+}
+
+export interface UnlockReportRequest extends WalletLookupRequest {
+  sessionId?: string;
+}
+
+export interface UnlockReportResponse {
+  mode: "mock" | "real";
+  session?: UnlockSession;
   error?: string;
 }

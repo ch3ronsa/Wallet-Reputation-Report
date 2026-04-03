@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { FreeReportResponse, FullReportResponse } from "@/types/api";
+import { FreeReportResponse, FullReportResponse, PaymentState, UnlockReportResponse } from "@/types/api";
 
 async function postJson<T>(url: string, body: Record<string, unknown>, headers?: HeadersInit): Promise<{
   status: number;
@@ -22,13 +22,25 @@ async function postJson<T>(url: string, body: Record<string, unknown>, headers?:
   };
 }
 
+const COPY = {
+  unlockCta: "Pay to unlock the full report",
+  pending: "Payment pending. Complete the x402 flow, then verify to reveal the report.",
+  success: "Payment success. The premium report is unlocked.",
+  failed: "Payment failed or could not be verified. You can retry the unlock flow.",
+};
+
 export default function HomePage() {
   const [address, setAddress] = useState("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045");
   const [freeReport, setFreeReport] = useState<FreeReportResponse["report"]>();
   const [fullReport, setFullReport] = useState<FullReportResponse["report"]>();
   const [paywall, setPaywall] = useState<Omit<FullReportResponse, "report">>();
+  const [paymentState, setPaymentState] = useState<PaymentState>("locked");
+  const [paymentMessage, setPaymentMessage] = useState<string>();
+  const [unlockSessionId, setUnlockSessionId] = useState<string>();
+  const [unlockToken, setUnlockToken] = useState<string>();
   const [loadingFree, setLoadingFree] = useState(false);
   const [loadingFull, setLoadingFull] = useState(false);
+  const [loadingPayment, setLoadingPayment] = useState(false);
   const [error, setError] = useState<string>();
 
   async function handleGenerateSummary(event: FormEvent) {
@@ -37,6 +49,10 @@ export default function HomePage() {
     setError(undefined);
     setFullReport(undefined);
     setPaywall(undefined);
+    setPaymentState("locked");
+    setPaymentMessage(undefined);
+    setUnlockSessionId(undefined);
+    setUnlockToken(undefined);
 
     try {
       const { data } = await postJson<FreeReportResponse>("/api/report/free", {
@@ -56,32 +72,114 @@ export default function HomePage() {
     }
   }
 
+  async function loadFullReport(token?: string) {
+    const { status, data } = await postJson<FullReportResponse>(
+      "/api/report/full",
+      {
+        address,
+        chain: "base",
+      },
+      token ? { "x-report-unlock-token": token } : undefined,
+    );
+
+    if (status === 402) {
+      setPaywall(data);
+      setPaymentState(data.paymentState ?? "locked");
+      setPaymentMessage("The premium report is locked until payment is verified.");
+      return false;
+    }
+
+    if (!data.report || data.error) {
+      throw new Error(data.error ?? "Unable to load the full report.");
+    }
+
+    setFullReport(data.report);
+    setPaywall(undefined);
+    setPaymentState("paid");
+    setPaymentMessage(COPY.success);
+    return true;
+  }
+
   async function handleUnlockAttempt() {
     setLoadingFull(true);
     setError(undefined);
 
     try {
-      const { status, data } = await postJson<FullReportResponse>("/api/report/full", {
-        address,
-        chain: "base",
-      });
-
-      if (status === 402) {
-        setPaywall(data);
-        setFullReport(undefined);
-        return;
-      }
-
-      if (!data.report || data.error) {
-        throw new Error(data.error ?? "Unable to load the full report.");
-      }
-
-      setFullReport(data.report);
-      setPaywall(undefined);
+      await loadFullReport(unlockToken);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Unable to load the full report.");
     } finally {
       setLoadingFull(false);
+    }
+  }
+
+  async function handleStartPayment() {
+    setLoadingPayment(true);
+    setError(undefined);
+
+    try {
+      const { data } = await postJson<UnlockReportResponse>("/api/report/unlock", {
+        address,
+        chain: "base",
+      });
+
+      if (!data.session || data.error) {
+        throw new Error(data.error ?? "Unable to start payment.");
+      }
+
+      setUnlockSessionId(data.session.sessionId);
+      setPaymentState(data.session.state);
+      setPaymentMessage(data.session.message || COPY.pending);
+    } catch (caughtError) {
+      setPaymentState("failed");
+      setPaymentMessage(COPY.failed);
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to start payment.");
+    } finally {
+      setLoadingPayment(false);
+    }
+  }
+
+  async function handleVerifyPayment() {
+    if (!unlockSessionId) {
+      setPaymentState("failed");
+      setPaymentMessage("No payment session exists yet. Start the unlock flow first.");
+      return;
+    }
+
+    setLoadingPayment(true);
+    setError(undefined);
+
+    try {
+      const { data } = await postJson<UnlockReportResponse>("/api/report/unlock/verify", {
+        address,
+        chain: "base",
+        sessionId: unlockSessionId,
+      });
+
+      if (!data.session || data.error) {
+        throw new Error(data.error ?? "Unable to verify payment.");
+      }
+
+      setPaymentState(data.session.state);
+      setPaymentMessage(data.session.message);
+
+      if (data.session.state === "paid" && data.session.unlockToken) {
+        setUnlockToken(data.session.unlockToken);
+        const loaded = await loadFullReport(data.session.unlockToken);
+
+        if (!loaded) {
+          setPaymentState("failed");
+          setPaymentMessage("Payment was verified, but the report unlock could not be completed.");
+        }
+      } else if (data.session.state === "failed") {
+        setPaymentMessage(data.session.failureReason ?? COPY.failed);
+      }
+    } catch (caughtError) {
+      setPaymentState("failed");
+      setPaymentMessage(COPY.failed);
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to verify payment.");
+    } finally {
+      setLoadingPayment(false);
     }
   }
 
@@ -90,21 +188,21 @@ export default function HomePage() {
       <section className="hero">
         <h1>Wallet Reputation Report</h1>
         <p>
-          Deterministic, monetizable wallet intelligence. The free tier gives a short risk read; the paid report turns
-          the same profile into an operator-ready decision document.
+          Free summary first, x402-paid premium report second. The monetization flow is adapter-driven, demo-safe in
+          mock mode, and isolated from the reporting logic.
         </p>
         <div className="hero-badges">
-          <span className="badge">Allium-backed profile</span>
-          <span className="badge">Deterministic scoring</span>
-          <span className="badge">Free summary</span>
-          <span className="badge">Premium report</span>
+          <span className="badge">Free summary visible now</span>
+          <span className="badge">Premium report locked</span>
+          <span className="badge">Pay-per-report unlock</span>
+          <span className="badge">Pending / paid / failed states</span>
         </div>
       </section>
 
       <section className="grid">
         <div className="panel">
           <h2>Generate a report</h2>
-          <p>Paste a wallet address to get a short free read first, then unlock the structured full report.</p>
+          <p>Paste a wallet address to get the free summary immediately and decide whether to unlock the full report.</p>
           <form onSubmit={handleGenerateSummary}>
             <label className="field-label" htmlFor="wallet-address">
               Wallet address
@@ -126,7 +224,7 @@ export default function HomePage() {
                 onClick={handleUnlockAttempt}
                 disabled={loadingFull}
               >
-                {loadingFull ? "Checking paywall..." : "Unlock full report"}
+                {loadingFull ? "Checking access..." : "Open premium report"}
               </button>
             </div>
           </form>
@@ -134,19 +232,23 @@ export default function HomePage() {
         </div>
 
         <div className="panel">
-          <h2>What changes between free and paid</h2>
+          <h2>Monetization flow</h2>
           <div className="signal-list">
             <div className="signal neutral">
-              <strong>Free summary</strong>
-              <small>Address, chain, overall risk level, three key reasons, and a quick snapshot.</small>
+              <strong>{COPY.unlockCta}</strong>
+              <small>The user starts a paid unlock session for the premium report.</small>
             </div>
             <div className="signal neutral">
-              <strong>Full report</strong>
-              <small>Score breakdown, counterparties, concentration, activity observations, limitations, and interpretation.</small>
+              <strong>Payment pending</strong>
+              <small>{COPY.pending}</small>
             </div>
             <div className="signal neutral">
-              <strong>Rules</strong>
-              <small>Facts stay in fact sections. Interpretation stays in interpretation sections.</small>
+              <strong>Payment success</strong>
+              <small>{COPY.success}</small>
+            </div>
+            <div className="signal neutral">
+              <strong>Payment failed</strong>
+              <small>{COPY.failed}</small>
             </div>
           </div>
         </div>
@@ -169,7 +271,7 @@ export default function HomePage() {
                 <div>
                   <h3>{freeReport.walletAddress}</h3>
                   <p>
-                    Chain: {freeReport.chain} | Overall risk: {freeReport.overallRiskLevel}
+                    Chain: {freeReport.chain} | Risk: {freeReport.overallRiskLevel}
                   </p>
                 </div>
               </div>
@@ -212,24 +314,25 @@ export default function HomePage() {
               </div>
             </>
           ) : (
-            <p className="subtle">Generate a summary to fill this card with a short, operator-friendly wallet read.</p>
+            <p className="subtle">Generate a summary to see the free layer of the product.</p>
           )}
         </div>
 
         <div className="panel report-card">
-          <h2>Locked full report</h2>
+          <h2>Premium report</h2>
           {fullReport ? (
             <>
+              <div className="status-note">Unlocked</div>
               <div className="signal-list">
-                <div className="signal neutral">
+                <div className="signal positive">
                   <strong>Interpretation</strong>
                   <small>{fullReport.interpretation.plainLanguage}</small>
                 </div>
-                <div className="signal neutral">
+                <div className="signal positive">
                   <strong>Trust posture</strong>
                   <small>{fullReport.interpretation.trustPosture}</small>
                 </div>
-                <div className="signal neutral">
+                <div className="signal positive">
                   <strong>Commercial note</strong>
                   <small>{fullReport.interpretation.monetizationNote}</small>
                 </div>
@@ -238,12 +341,37 @@ export default function HomePage() {
           ) : (
             <>
               <div className="locked-card">
-                <div className="locked-badge">Premium</div>
-                <h3>Facts, interpretation, and a monetizable decision layer</h3>
-                <p>
-                  The paid report is designed to feel operationally useful: clearly structured, easy to scan, and
-                  suitable for underwriting-style decisions.
-                </p>
+                <div className="locked-badge">Locked</div>
+                <h3>Pay per report unlock</h3>
+                <p>The full report stays locked until payment verification succeeds.</p>
+              </div>
+
+              <div className="button-row">
+                <button className="button button-primary" type="button" onClick={handleStartPayment} disabled={loadingPayment}>
+                  {loadingPayment ? "Starting payment..." : COPY.unlockCta}
+                </button>
+                <button
+                  className="button button-secondary"
+                  type="button"
+                  onClick={handleVerifyPayment}
+                  disabled={loadingPayment || !unlockSessionId}
+                >
+                  {loadingPayment ? "Verifying..." : "Verify payment and reveal report"}
+                </button>
+              </div>
+
+              <div className={`signal ${paymentState === "failed" ? "negative" : paymentState === "paid" ? "positive" : "neutral"}`}>
+                <strong>State: {paymentState}</strong>
+                <small>
+                  {paymentMessage ??
+                    (paymentState === "pending"
+                      ? COPY.pending
+                      : paymentState === "paid"
+                        ? COPY.success
+                        : paymentState === "failed"
+                          ? COPY.failed
+                          : "The premium report is currently locked.")}
+                </small>
               </div>
 
               {paywall?.requirements ? (
@@ -280,7 +408,7 @@ export default function HomePage() {
           </div>
 
           <div className="panel">
-            <h2>Facts</h2>
+            <h2>Paid content</h2>
             <h3>Notable counterparties</h3>
             <div className="signal-list">
               {fullReport.facts.notableCounterparties.map((counterparty) => (
@@ -311,7 +439,7 @@ export default function HomePage() {
               ))}
             </div>
 
-            <h3>Limitations and unknowns</h3>
+            <h3>Limitations / unknowns</h3>
             <div className="signal-list">
               {fullReport.facts.limitations.map((item) => (
                 <div className="signal neutral" key={item}>
@@ -326,7 +454,7 @@ export default function HomePage() {
       {!fullReport && (paywall?.owsCommands || paywall?.moonpay) ? (
         <section className="grid">
           <div className="panel">
-            <h2>OWS commands</h2>
+            <h2>OWS payment workflow</h2>
             <div className="command-list">
               {paywall?.owsCommands?.map((command) => (
                 <div className="command" key={command}>
@@ -337,7 +465,7 @@ export default function HomePage() {
           </div>
 
           <div className="panel">
-            <h2>MoonPay</h2>
+            <h2>MoonPay funding workflow</h2>
             <p>
               <strong>{paywall?.moonpay?.skillName}</strong>: {paywall?.moonpay?.description}
             </p>
