@@ -5,6 +5,7 @@
 - Run `npm install`
 - Run `npm run build`
 - Run `npm run dev`
+- Run `npm run demo:wsl:check`
 - Confirm the landing page loads on `http://localhost:3000`
 - Confirm the default wallet generates a free summary
 - Confirm the premium report returns a locked x402 paywall before payment
@@ -14,6 +15,7 @@
   - OWS service wallet identity
   - OWS CLI buyer commands
   - MoonPay top-up helper or fallback
+  - Ubuntu / WSL demo scripts ready for the CLI part
 
 ## Mock-mode demo path
 

@@ -62,6 +62,18 @@ npm run dev
 
 4. Open `http://localhost:3000`
 
+## Ubuntu / WSL OWS Demo Path
+
+If you want the OWS CLI part of the demo to run through Ubuntu / WSL instead of staying as documentation only:
+
+```powershell
+npm run demo:wsl:setup
+npm run demo:wsl:check
+npm run demo:wsl:commands
+```
+
+This project now ships Windows wrappers plus Ubuntu shell scripts for the OWS CLI flow. See [docs/setup-ubuntu.md](docs/setup-ubuntu.md).
+
 ## Environment Variables
 
 Core runtime:

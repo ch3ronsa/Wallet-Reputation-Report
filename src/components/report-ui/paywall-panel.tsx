@@ -57,6 +57,10 @@ export function PaywallPanel(props: PaywallPanelProps) {
             <div className="signal neutral">
               <small>{props.paywall.owsWorkflow.note}</small>
             </div>
+            <div className="signal neutral">
+              <strong>Ubuntu / WSL demo path</strong>
+              <small>Run `npm run demo:wsl:check` and `npm run demo:wsl:commands` from the repo root to verify the real OWS CLI path before presenting.</small>
+            </div>
           </>
         ) : null}
       </div>

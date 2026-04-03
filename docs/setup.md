@@ -1,5 +1,7 @@
 # Setup And Demo Workflow
 
+For a verified Ubuntu / WSL demo path, see [docs/setup-ubuntu.md](./setup-ubuntu.md).
+
 ## Service identity with OWS
 
 Create the service wallet:
@@ -26,7 +28,7 @@ This is meaningful in-product now:
 
 - the report provider exposes an OWS-managed service wallet as payment identity
 - the buyer can use OWS CLI to create a wallet and pay to unlock a premium report
-- if the buyer wallet lacks funds, MoonPay is the natural top-up path before retrying unlock
+- if the buyer wallet lacks funds, MoonPay is the natural top-up path before retrying unlock through `ows fund deposit`
 
 ## MoonPay CLI fallback
 

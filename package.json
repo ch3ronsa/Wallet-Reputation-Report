@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "demo:wsl:setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup-ows-wsl.ps1",
+    "demo:wsl:check": "powershell -ExecutionPolicy Bypass -File ./scripts/check-ows-wsl.ps1",
+    "demo:wsl:commands": "powershell -ExecutionPolicy Bypass -File ./scripts/demo-ows-unlock-wsl.ps1"
   },
   "dependencies": {
     "next": "^15.2.0",
