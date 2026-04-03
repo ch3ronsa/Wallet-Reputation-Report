@@ -46,7 +46,7 @@ export function buildWalletMetrics(input: {
     txCount,
     uniqueActiveDays: activeDays.size,
     uniqueCounterparties: counterparties.size,
-    failedTxRatio: txCount === 0 ? 1 : failedTxCount / txCount,
+    failedTxRatio: txCount === 0 ? 0 : failedTxCount / txCount,
     stablecoinShare: totalPortfolioUsd === 0 ? 0 : stablecoinUsd / totalPortfolioUsd,
     largestAssetShare,
     totalPortfolioUsd,

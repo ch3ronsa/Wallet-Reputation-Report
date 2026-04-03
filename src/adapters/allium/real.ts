@@ -1,8 +1,9 @@
+import { ALLIUM_ASSUMPTIONS } from "@/adapters/allium/assumptions";
+import { normalizeWalletProfile } from "@/adapters/allium/normalize";
 import { assertAlliumConfigured, env } from "@/config/env";
 import { AlliumClient } from "@/types/adapters";
 import { WalletLookupRequest } from "@/types/api";
 import { WalletBalance, WalletProfile, WalletTransaction } from "@/types/domain";
-import { buildWalletMetrics } from "@/scoring/engine";
 
 type AlliumResponse = {
   items?: Array<Record<string, unknown>>;
@@ -25,8 +26,30 @@ function safeString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
+function readNestedValue(item: Record<string, unknown>, path: string): unknown {
+  return path.split(".").reduce<unknown>((current, key) => {
+    if (!current || typeof current !== "object") {
+      return undefined;
+    }
+
+    return (current as Record<string, unknown>)[key];
+  }, item);
+}
+
+function readFirst(item: Record<string, unknown>, paths: readonly string[]): unknown {
+  for (const path of paths) {
+    const value = readNestedValue(item, path);
+
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
 function extractLabels(item: Record<string, unknown>): string[] {
-  const labels = item.labels;
+  const labels = readFirst(item, ALLIUM_ASSUMPTIONS.transactionFields.labels);
 
   if (!Array.isArray(labels)) {
     return [];
@@ -47,69 +70,47 @@ function extractLabels(item: Record<string, unknown>): string[] {
     .filter(Boolean);
 }
 
-function mapTransaction(item: Record<string, unknown>): WalletTransaction {
+function mapTransaction(item: Record<string, unknown>): WalletTransaction | null {
+  const hash = safeString(readFirst(item, ALLIUM_ASSUMPTIONS.transactionFields.hash));
+
+  if (!hash) {
+    return null;
+  }
+
+  const successValue = readFirst(item, ALLIUM_ASSUMPTIONS.transactionFields.success);
+  const status = typeof successValue === "string" ? successValue.toLowerCase() : "";
+
   return {
-    hash: safeString(item.hash) || safeString(item.id),
-    timestamp: safeString(item.block_timestamp) || new Date().toISOString(),
-    success: item.success === false ? false : item.status === "failed" ? false : true,
-    from: safeString(item.from_address) || safeString(item.from),
-    to: safeString(item.to_address) || safeString(item.to),
-    type: safeString(item.type),
-    feeUsd: safeNumber((item.fee as Record<string, unknown> | undefined)?.amount) || safeNumber(item.fee_usd),
-    valueUsd: safeNumber(item.value_usd),
+    hash,
+    timestamp: safeString(readFirst(item, ALLIUM_ASSUMPTIONS.transactionFields.timestamp)) || new Date().toISOString(),
+    success: successValue === false ? false : status === "failed" ? false : true,
+    from: safeString(readFirst(item, ALLIUM_ASSUMPTIONS.transactionFields.from)) || undefined,
+    to: safeString(readFirst(item, ALLIUM_ASSUMPTIONS.transactionFields.to)) || undefined,
+    type: safeString(readFirst(item, ALLIUM_ASSUMPTIONS.transactionFields.type)) || "unknown",
+    feeUsd: safeNumber(readFirst(item, ALLIUM_ASSUMPTIONS.transactionFields.feeUsd)),
+    valueUsd: safeNumber(readFirst(item, ALLIUM_ASSUMPTIONS.transactionFields.valueUsd)),
     labels: extractLabels(item),
   };
 }
 
 function mapBalance(item: Record<string, unknown>): WalletBalance {
-  const token = (item.token as Record<string, unknown> | undefined) ?? {};
-  const tokenInfo = (token.info as Record<string, unknown> | undefined) ?? {};
-  const symbol = safeString(tokenInfo.symbol) || safeString(item.symbol) || "UNKNOWN";
+  const symbol = safeString(readFirst(item, ALLIUM_ASSUMPTIONS.balanceFields.symbol)) || "UNKNOWN";
+  const tokenType = safeString(readFirst(item, ALLIUM_ASSUMPTIONS.balanceFields.tokenType));
 
   return {
     symbol,
-    tokenAddress: safeString(token.address) || safeString(item.token_address),
-    amount:
-      safeNumber(item.amount) ||
-      safeNumber(item.balance) ||
-      safeNumber(item.balance_formatted) ||
-      safeNumber(item.raw_balance),
-    usdValue: safeNumber(item.balance_usd) || safeNumber(item.value_usd) || safeNumber(item.usd_value),
+    tokenAddress: safeString(readFirst(item, ALLIUM_ASSUMPTIONS.balanceFields.tokenAddress)) || undefined,
+    amount: safeNumber(readFirst(item, ALLIUM_ASSUMPTIONS.balanceFields.amount)),
+    usdValue: safeNumber(readFirst(item, ALLIUM_ASSUMPTIONS.balanceFields.usdValue)),
     isStablecoin: ["USDC", "USDT", "DAI", "USDBC"].includes(symbol.toUpperCase()),
-    isNative: token.type === "native" || ["ETH", "WETH"].includes(symbol.toUpperCase()),
+    isNative: tokenType === "native" || ["ETH", "WETH"].includes(symbol.toUpperCase()),
   };
 }
 
-export class RealAlliumAdapter implements AlliumClient {
+export class AlliumHttpClient {
   private readonly baseUrl = env.alliumBaseUrl.replace(/\/$/, "");
 
-  async getWalletProfile(request: WalletLookupRequest): Promise<WalletProfile> {
-    assertAlliumConfigured();
-
-    const [transactionItems, balanceItems] = await Promise.all([
-      this.post("/api/v1/developer/wallet/transactions", [
-        { chain: request.chain, address: request.address },
-      ]),
-      this.post("/api/v1/developer/wallet/balances", [
-        { chain: request.chain, address: request.address },
-      ]),
-    ]);
-
-    const transactions = (transactionItems.items ?? []).map(mapTransaction).filter((item) => item.hash);
-    const balances = (balanceItems.items ?? []).map(mapBalance).filter((item) => item.amount > 0 || item.usdValue > 0);
-
-    return {
-      address: request.address,
-      chain: request.chain,
-      dataSource: "allium",
-      observedAt: new Date().toISOString(),
-      balances,
-      transactions,
-      metrics: buildWalletMetrics({ balances, transactions }),
-    };
-  }
-
-  private async post(path: string, body: unknown): Promise<AlliumResponse> {
+  async post(path: string, body: unknown): Promise<AlliumResponse> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: {
@@ -120,11 +121,50 @@ export class RealAlliumAdapter implements AlliumClient {
       cache: "no-store",
     });
 
+    if (response.status === 204 || response.status === 404 || response.status === 422) {
+      return { items: [] };
+    }
+
     if (!response.ok) {
       const details = await response.text();
       throw new Error(`Allium request failed (${response.status}): ${details}`);
     }
 
-    return (await response.json()) as AlliumResponse;
+    const data = (await response.json()) as AlliumResponse;
+    return {
+      items: Array.isArray(data.items) ? data.items : [],
+    };
+  }
+}
+
+export class RealAlliumAdapter implements AlliumClient {
+  constructor(private readonly httpClient: AlliumHttpClient = new AlliumHttpClient()) {}
+
+  async getWalletProfile(request: WalletLookupRequest): Promise<WalletProfile> {
+    assertAlliumConfigured();
+
+    const [transactionResponse, balanceResponse] = await Promise.all([
+      this.httpClient.post(ALLIUM_ASSUMPTIONS.endpoints.transactions, [
+        { chain: request.chain, address: request.address },
+      ]),
+      this.httpClient.post(ALLIUM_ASSUMPTIONS.endpoints.balances, [
+        { chain: request.chain, address: request.address },
+      ]),
+    ]);
+
+    const transactions = (transactionResponse.items ?? [])
+      .map(mapTransaction)
+      .filter((item): item is WalletTransaction => Boolean(item));
+    const balances = (balanceResponse.items ?? [])
+      .map(mapBalance)
+      .filter((item) => item.amount > 0 || item.usdValue > 0);
+
+    return normalizeWalletProfile({
+      request,
+      dataSource: "allium",
+      observedAt: new Date().toISOString(),
+      balances,
+      transactions,
+    });
   }
 }

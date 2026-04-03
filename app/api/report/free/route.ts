@@ -1,4 +1,3 @@
-import { env, resolveRuntimeMode } from "@/config/env";
 import { parseReportRequest } from "@/lib/validation";
 import { generateWalletReport } from "@/reports/generate-report";
 import { FreeReportResponse } from "@/types/api";
@@ -11,7 +10,7 @@ export async function POST(request: NextRequest) {
     const report = await generateWalletReport(reportRequest);
 
     return NextResponse.json<FreeReportResponse>({
-      mode: resolveRuntimeMode(env.alliumMode),
+      mode: report.wallet.dataSource === "allium" ? "real" : "mock",
       report: {
         wallet: report.wallet,
         generatedAt: report.generatedAt,
@@ -22,7 +21,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to generate free report.";
     return NextResponse.json<FreeReportResponse>(
-      { mode: resolveRuntimeMode(env.alliumMode), error: message },
+      { mode: "mock", error: message },
       { status: 400 },
     );
   }

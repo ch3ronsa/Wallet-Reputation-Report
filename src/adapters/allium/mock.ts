@@ -1,7 +1,7 @@
 import { AlliumClient } from "@/types/adapters";
 import { WalletLookupRequest } from "@/types/api";
 import { WalletProfile } from "@/types/domain";
-import { buildWalletMetrics } from "@/scoring/engine";
+import { normalizeWalletProfile } from "@/adapters/allium/normalize";
 
 function buildMockProfile(request: WalletLookupRequest): WalletProfile {
   const transactions = [
@@ -14,7 +14,7 @@ function buildMockProfile(request: WalletLookupRequest): WalletProfile {
       type: "swap",
       feeUsd: 0.08,
       valueUsd: 280,
-      labels: ["dex"],
+      labels: ["dex", "contract"],
     },
     {
       hash: "0xmock2",
@@ -22,7 +22,7 @@ function buildMockProfile(request: WalletLookupRequest): WalletProfile {
       success: true,
       from: "0x2222222222222222222222222222222222222222",
       to: request.address,
-      type: "transfer",
+      type: "stablecoin-transfer",
       feeUsd: 0.02,
       valueUsd: 120,
       labels: ["stablecoin-transfer"],
@@ -37,6 +37,17 @@ function buildMockProfile(request: WalletLookupRequest): WalletProfile {
       feeUsd: 0.15,
       valueUsd: 0,
       labels: ["nft"],
+    },
+    {
+      hash: "0xmock4",
+      timestamp: "2026-03-18T08:05:00.000Z",
+      success: true,
+      from: request.address,
+      to: "0x1111111111111111111111111111111111111111",
+      type: "contract-call",
+      feeUsd: 0.12,
+      valueUsd: 80,
+      labels: ["contract", "bridge"],
     },
   ];
 
@@ -66,15 +77,13 @@ function buildMockProfile(request: WalletLookupRequest): WalletProfile {
     },
   ];
 
-  return {
-    address: request.address,
-    chain: request.chain,
+  return normalizeWalletProfile({
+    request,
     dataSource: "mock",
     observedAt: new Date().toISOString(),
     balances,
     transactions,
-    metrics: buildWalletMetrics({ balances, transactions }),
-  };
+  });
 }
 
 export class MockAlliumAdapter implements AlliumClient {

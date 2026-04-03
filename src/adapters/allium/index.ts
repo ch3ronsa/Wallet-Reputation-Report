@@ -4,5 +4,11 @@ import { MockAlliumAdapter } from "@/adapters/allium/mock";
 import { RealAlliumAdapter } from "@/adapters/allium/real";
 
 export function createAlliumClient(): AlliumClient {
-  return resolveRuntimeMode(env.alliumMode) === "mock" ? new MockAlliumAdapter() : new RealAlliumAdapter();
+  const mode = resolveRuntimeMode(env.alliumMode);
+
+  if (mode === "mock" || !env.alliumApiKey) {
+    return new MockAlliumAdapter();
+  }
+
+  return new RealAlliumAdapter();
 }

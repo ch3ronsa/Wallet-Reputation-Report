@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     const report = await generateWalletReport(reportRequest);
 
     return NextResponse.json<FullReportResponse>({
-      mode: resolveRuntimeMode(env.x402Mode),
+      mode: report.wallet.dataSource === "allium" ? "real" : "mock",
       report,
     });
   } catch (error) {

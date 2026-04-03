@@ -188,6 +188,16 @@ export default function HomePage() {
                   <span>Counterparties</span>
                   <strong>{freeReport.wallet.metrics.uniqueCounterparties}</strong>
                 </div>
+                <div className="metric">
+                  <span>Wallet age</span>
+                  <strong>
+                    {freeReport.wallet.age.walletAgeDays !== null ? `${freeReport.wallet.age.walletAgeDays}d` : "Unknown"}
+                  </strong>
+                </div>
+                <div className="metric">
+                  <span>Recent 7d tx</span>
+                  <strong>{freeReport.wallet.activity.recentTxCount7d}</strong>
+                </div>
               </div>
 
               <div className="signal-list">
@@ -260,6 +270,22 @@ export default function HomePage() {
 
           <div className="panel">
             <h2>Adapter guidance</h2>
+            {freeReport?.wallet.topCounterparties.length ? (
+              <>
+                <h3>Top counterparties</h3>
+                <div className="signal-list">
+                  {freeReport.wallet.topCounterparties.map((counterparty) => (
+                    <div className="signal neutral" key={counterparty.address}>
+                      <strong>{counterparty.address}</strong>
+                      <small>
+                        {counterparty.interactions} interactions, {counterparty.direction} flow
+                      </small>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : null}
+
             {paywall?.owsCommands ? (
               <>
                 <h3>OWS commands</h3>

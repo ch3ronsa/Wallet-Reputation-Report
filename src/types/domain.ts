@@ -37,6 +37,76 @@ export interface WalletMetrics {
   suspiciousLabelCount: number;
 }
 
+export interface WalletAgeSummary {
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
+  walletAgeDays: number | null;
+}
+
+export interface WalletActivitySummary {
+  txCount: number;
+  successfulTxCount: number;
+  failedTxCount: number;
+  uniqueActiveDays: number;
+  recentTxCount7d: number;
+  avgTxPerActiveDay: number;
+  firstSeenAt: string | null;
+  lastSeenAt: string | null;
+}
+
+export interface CounterpartySummary {
+  address: string;
+  interactions: number;
+  inboundCount: number;
+  outboundCount: number;
+  direction: "inbound" | "outbound" | "mixed";
+  labels: string[];
+}
+
+export interface TokenConcentrationEntry {
+  symbol: string;
+  tokenAddress?: string;
+  usdValue: number;
+  share: number;
+  isStablecoin: boolean;
+  isNative: boolean;
+}
+
+export interface RecentActivityItem {
+  hash: string;
+  timestamp: string;
+  type: string;
+  success: boolean;
+  direction: "inbound" | "outbound" | "self" | "unknown";
+  counterparty?: string;
+  valueUsd?: number;
+  labels: string[];
+}
+
+export interface ContractInteractionSummary {
+  totalContractCalls: number;
+  uniqueContracts: number;
+  swapCount: number;
+  nftCount: number;
+  transferCount: number;
+  pattern: "inactive" | "transfer-heavy" | "contract-heavy" | "mixed";
+}
+
+export interface StablecoinFlowSummary {
+  available: boolean;
+  inboundUsd: number;
+  outboundUsd: number;
+  netUsd: number;
+  transferCount: number;
+}
+
+export interface WalletDataQuality {
+  isSparse: boolean;
+  missingBalances: boolean;
+  missingTransactions: boolean;
+  warnings: string[];
+}
+
 export interface WalletProfile {
   address: string;
   chain: SupportedChain;
@@ -45,6 +115,14 @@ export interface WalletProfile {
   balances: WalletBalance[];
   transactions: WalletTransaction[];
   metrics: WalletMetrics;
+  age: WalletAgeSummary;
+  activity: WalletActivitySummary;
+  topCounterparties: CounterpartySummary[];
+  tokenConcentration: TokenConcentrationEntry[];
+  recentActivity: RecentActivityItem[];
+  contractInteractions: ContractInteractionSummary;
+  stablecoinFlow: StablecoinFlowSummary;
+  dataQuality: WalletDataQuality;
 }
 
 export interface RiskSignal {
