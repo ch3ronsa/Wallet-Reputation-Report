@@ -6,12 +6,15 @@ type PremiumReportViewProps = {
 
 export function PremiumReportView(props: PremiumReportViewProps) {
   return (
-    <section className="grid">
-      <div className="panel report-card">
-        <div className="section-heading">
-          <h2>Interpretation</h2>
-          <span className="section-tag">Derived from score</span>
-        </div>
+    <section className="panel report-card premium-stage-panel">
+      <div className="section-heading">
+        <h2>Premium report</h2>
+        <span className="section-tag">
+          {props.report.scoreBreakdown.riskLevel} risk | {props.report.scoreBreakdown.totalScore}/100
+        </span>
+      </div>
+
+      <div className="report-section">
         <p className="subtle">Explanation only. The score itself remains deterministic and rule-based.</p>
         <div className="signal-list">
           <div className="signal positive">
@@ -29,12 +32,10 @@ export function PremiumReportView(props: PremiumReportViewProps) {
         </div>
       </div>
 
-      <div className="panel report-card">
+      <div className="report-section">
         <div className="section-heading">
           <h2>Score breakdown</h2>
-          <span className="section-tag">
-            {props.report.scoreBreakdown.riskLevel} risk | {props.report.scoreBreakdown.totalScore}/100
-          </span>
+          <span className="section-tag">Signals</span>
         </div>
         <div className="signal-list">
           {props.report.scoreBreakdown.signals.map((signal) => (
@@ -48,7 +49,7 @@ export function PremiumReportView(props: PremiumReportViewProps) {
         </div>
       </div>
 
-      <div className="panel">
+      <div className="report-section">
         <div className="section-heading">
           <h2>Observed facts</h2>
           <span className="section-tag">Observed</span>
@@ -75,7 +76,7 @@ export function PremiumReportView(props: PremiumReportViewProps) {
         </div>
       </div>
 
-      <div className="panel">
+      <div className="report-section">
         <div className="section-heading">
           <h2>Activity and limitations</h2>
           <span className="section-tag">Context</span>

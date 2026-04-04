@@ -56,6 +56,7 @@ export default function HomePage() {
   const [error, setError] = useState<string>();
 
   const hasFreeSummary = Boolean(freeReport);
+  const showPremiumStage = Boolean(paywall || fullReport || unlockSessionId || loadingFull || loadingPayment);
   const auditDataMode = useMemo(() => (fullReport ? fullDataMode : freeDataMode), [freeDataMode, fullDataMode, fullReport]);
 
   async function handleGenerateSummary(event: FormEvent) {
@@ -289,9 +290,35 @@ export default function HomePage() {
         />
       ) : null}
 
-      <section className="grid">
-        <FreeSummaryCard report={freeReport} />
-        {!fullReport ? (
+      {showPremiumStage && freeReport ? (
+        <section className="report-stage">
+          <aside className="report-stage-sidebar">
+            <FreeSummaryCard report={freeReport} variant="sidebar" />
+          </aside>
+
+          <section className="report-stage-main">
+            {!fullReport ? (
+              <>
+                <PremiumTeaserCard
+                  paymentMode={paymentMode}
+                  paymentState={paymentState}
+                  paymentMessage={paymentMessage}
+                  loadingPayment={loadingPayment}
+                  canVerifyPayment={Boolean(unlockSessionId)}
+                  onStartPayment={handleStartPayment}
+                  onVerifyPayment={handleVerifyPayment}
+                  owsWalletLabel={paywall?.owsService ? `${paywall.owsService.walletName} | ${paywall.owsService.address}` : undefined}
+                />
+                <PaywallPanel paywall={paywall} />
+              </>
+            ) : (
+              <PremiumReportView report={fullReport} />
+            )}
+          </section>
+        </section>
+      ) : (
+        <section className="grid">
+          <FreeSummaryCard report={freeReport} />
           <PremiumTeaserCard
             paymentMode={paymentMode}
             paymentState={paymentState}
@@ -302,20 +329,8 @@ export default function HomePage() {
             onVerifyPayment={handleVerifyPayment}
             owsWalletLabel={paywall?.owsService ? `${paywall.owsService.walletName} | ${paywall.owsService.address}` : undefined}
           />
-        ) : (
-          <section className="panel report-card">
-            <div className="section-heading">
-              <h2>Premium status</h2>
-              <span className="section-tag">Unlocked</span>
-            </div>
-            <div className="status-note">{paymentMessage ?? COPY.success}</div>
-            <p className="subtle">The paid report is now visible below.</p>
-          </section>
-        )}
-      </section>
-
-      {!fullReport ? <PaywallPanel paywall={paywall} /> : null}
-      {fullReport ? <PremiumReportView report={fullReport} /> : null}
+        </section>
+      )}
     </main>
   );
 }
