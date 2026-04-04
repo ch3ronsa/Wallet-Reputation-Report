@@ -19,39 +19,39 @@ export function PremiumReportView(props: PremiumReportViewProps) {
           <h2>Operator view</h2>
           <span className="section-tag">{props.report.operatorView.operatorDecision}</span>
         </div>
-        <div className="metric-grid">
-          <div className="metric">
+        <div className="operator-snapshot-grid">
+          <div className="operator-snapshot-card">
             <span>Decision</span>
             <strong>{props.report.operatorView.operatorDecision}</strong>
           </div>
-          <div className="metric">
+          <div className="operator-snapshot-card">
             <span>Confidence</span>
             <strong>{props.report.operatorView.confidenceLevel}</strong>
           </div>
+          <div className="operator-snapshot-card operator-snapshot-wide">
+            <span>Behavior pattern</span>
+            <strong>{props.report.operatorView.behaviorPattern}</strong>
+          </div>
+          <div className="operator-snapshot-card operator-snapshot-wide">
+            <span>Funding source note</span>
+            <strong>{props.report.operatorView.fundingSourceNote}</strong>
+          </div>
+        </div>
+        <h3>Top activity types</h3>
+        <div className="operator-activity-grid">
+          {props.report.operatorView.topActivityTypes.map((activityType) => (
+            <div className="metric" key={activityType.label}>
+              <span>{activityType.label}</span>
+              <strong>{Math.round(activityType.share * 100)}%</strong>
+              <small>{activityType.count} recent item(s)</small>
+            </div>
+          ))}
         </div>
         <div className="signal-list">
-          <div className="signal positive">
-            <strong>Behavior pattern</strong>
-            <small>{props.report.operatorView.behaviorPattern}</small>
-          </div>
-          <div className="signal neutral">
-            <strong>Funding source note</strong>
-            <small>{props.report.operatorView.fundingSourceNote}</small>
-          </div>
           <div className="signal neutral">
             <strong>Confidence note</strong>
             <small>{props.report.operatorView.confidenceNote}</small>
           </div>
-        </div>
-        <div className="signal-list">
-          {props.report.operatorView.topActivityTypes.map((activityType) => (
-            <div className="signal neutral" key={activityType.label}>
-              <strong>{activityType.label}</strong>
-              <small>
-                {activityType.count} observed item(s) | {Math.round(activityType.share * 100)}% of recent classified activity
-              </small>
-            </div>
-          ))}
         </div>
       </div>
 
