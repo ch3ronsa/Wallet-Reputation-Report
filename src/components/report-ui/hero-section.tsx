@@ -2,19 +2,18 @@ export function HeroSection() {
   return (
     <section className="hero">
       <div className="hero-copy">
-        <span className="hero-kicker">Paid onchain intelligence</span>
+        <span className="hero-kicker">Wallet intelligence</span>
         <h1>Wallet Reputation Report</h1>
         <p>
-          A clean wallet risk read powered by Allium, priced with x402, and delivered through an OWS-native payment
-          flow with MoonPay top-up support when the buyer wallet needs funds.
+          Enter a wallet address, get a quick risk summary, and unlock the full reputation report when deeper review
+          is worth paying for.
         </p>
       </div>
       <div className="hero-badges">
-        <span className="badge">Allium intelligence</span>
         <span className="badge">Deterministic score</span>
-        <span className="badge">x402 unlock</span>
-        <span className="badge">OWS wallet + CLI</span>
-        <span className="badge">MoonPay top-up</span>
+        <span className="badge">Free summary</span>
+        <span className="badge">Paid full report</span>
+        <span className="badge">OWS + x402</span>
       </div>
     </section>
   );

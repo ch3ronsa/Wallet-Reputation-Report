@@ -10,36 +10,26 @@ export function StackProofGrid(props: StackProofGridProps) {
   return (
     <section className="proof-grid">
       <article className="proof-card">
-        <span className="section-tag">Allium</span>
-        <h2>Intelligence layer</h2>
-        <p>{props.dataMode === "real" ? "Live wallet intelligence is active." : "Mock fallback is active for demo-safe runs."}</p>
+        <span className="proof-label">Data</span>
+        <p>{props.dataMode === "real" ? "Allium live mode active." : "Demo dataset active."}</p>
       </article>
 
       <article className="proof-card">
-        <span className="section-tag">x402</span>
-        <h2>Monetization gate</h2>
-        <p>{props.paymentMode === "real" ? "Live payment verification path is configured." : "Demo-safe unlock flow is active and still enforces the paywall."}</p>
+        <span className="proof-label">Payments</span>
+        <p>{props.paymentMode === "real" ? "x402 live path." : "x402 demo-safe unlock path."}</p>
       </article>
 
       <article className="proof-card">
-        <span className="section-tag">OWS wallet</span>
-        <h2>Service identity</h2>
-        <p>{props.owsWalletName ? `${props.owsWalletName} is surfaced as the provider payment identity.` : "Provider wallet identity appears when premium access is checked."}</p>
+        <span className="proof-label">OWS</span>
+        <p>{props.owsWalletName ? `${props.owsWalletName} is the service wallet.` : "Service wallet shown at unlock."}</p>
       </article>
 
       <article className="proof-card">
-        <span className="section-tag">OWS CLI</span>
-        <h2>Buyer workflow</h2>
-        <p>CLI commands show wallet creation, funding, and the exact paid request used to unlock the report.</p>
-      </article>
-
-      <article className="proof-card">
-        <span className="section-tag">MoonPay skill</span>
-        <h2>Top-up helper</h2>
+        <span className="proof-label">MoonPay</span>
         <p>
           {props.moonPayAvailable === false
-            ? "Local dev fallback is shown clearly when MoonPay is unavailable."
-            : `${props.moonPaySkillName ?? "moonpay-buy-crypto"} helps fund the buyer wallet before retrying unlock.`}
+            ? "Funding fallback visible."
+            : `${props.moonPaySkillName ?? "moonpay-buy-crypto"} can top up the buyer wallet.`}
         </p>
       </article>
     </section>

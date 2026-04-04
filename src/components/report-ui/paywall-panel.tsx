@@ -59,7 +59,7 @@ export function PaywallPanel(props: PaywallPanelProps) {
             </div>
             <div className="signal neutral">
               <strong>Ubuntu / WSL demo path</strong>
-              <small>Run `npm run demo:wsl:check` and `npm run demo:wsl:commands` from the repo root to verify the real OWS CLI path before presenting.</small>
+              <small>Use `npm run demo:wsl:check` before the demo, then show `npm run demo:wsl:commands` at the end if needed.</small>
             </div>
           </>
         ) : null}

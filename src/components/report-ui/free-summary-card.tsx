@@ -16,7 +16,7 @@ export function FreeSummaryCard(props: FreeSummaryCardProps) {
           <div className="score-row">
             <div>
               <div className="score-band">{props.report.overallRiskLevel} risk</div>
-              <div className="score-value">{props.report.quickSnapshot.visiblePortfolioUsd > 0 ? `$${props.report.quickSnapshot.visiblePortfolioUsd.toFixed(0)}` : "Scan"}</div>
+              <div className="score-value">{props.report.overallRiskLevel.toUpperCase()}</div>
             </div>
             <div>
               <h3>{props.report.walletAddress}</h3>
@@ -66,7 +66,7 @@ export function FreeSummaryCard(props: FreeSummaryCardProps) {
       ) : (
         <div className="empty-card">
           <h3>Free trust read</h3>
-          <p>Address, chain, overall risk level, three key reasons, and a quick wallet snapshot appear here.</p>
+          <p>Risk level, three reasons, and a short wallet snapshot appear here.</p>
         </div>
       )}
     </section>

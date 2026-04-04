@@ -15,7 +15,7 @@ export function WalletForm(props: WalletFormProps) {
   return (
     <section className="panel">
       <h2>Check a wallet</h2>
-      <p>Start with the free summary, then move into the paid report only if the wallet merits deeper review.</p>
+      <p>Start with the free summary. If the wallet needs deeper review, unlock the full report.</p>
       <form onSubmit={props.onGenerateSummary}>
         <label className="field-label" htmlFor="wallet-address">
           Wallet address
@@ -42,7 +42,7 @@ export function WalletForm(props: WalletFormProps) {
         </div>
       </form>
       {!props.hasFreeSummary ? (
-        <p className="subtle">Generate the free summary first so the premium unlock starts from a visible trust snapshot.</p>
+        <p className="subtle">Generate the summary first, then move to the paid report.</p>
       ) : null}
       {props.error ? <div className="error-note">{props.error}</div> : null}
     </section>

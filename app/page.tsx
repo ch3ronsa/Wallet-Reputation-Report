@@ -262,21 +262,21 @@ export default function HomePage() {
 
         <section className="panel">
           <div className="section-heading">
-            <h2>What you get</h2>
-            <span className="section-tag">Demo flow</span>
+            <h2>How it works</h2>
+            <span className="section-tag">Simple flow</span>
           </div>
           <div className="signal-list">
             <div className="signal neutral">
-              <strong>Free summary</strong>
-              <small>Fast trust and risk read with three reasons and a concise snapshot.</small>
+              <strong>1. Free summary</strong>
+              <small>Get the first risk read instantly.</small>
             </div>
             <div className="signal neutral">
-              <strong>Premium report</strong>
-              <small>Detailed signal breakdown, counterparties, concentration, activity, and limitations.</small>
+              <strong>2. Premium unlock</strong>
+              <small>Pay only if you want the deeper report.</small>
             </div>
             <div className="signal neutral">
-              <strong>Unlock path</strong>
-              <small>Paid intelligence via x402, with OWS payment identity and MoonPay top-up help when needed.</small>
+              <strong>3. Full report</strong>
+              <small>Review score details, activity, counterparties, and limitations.</small>
             </div>
           </div>
         </section>

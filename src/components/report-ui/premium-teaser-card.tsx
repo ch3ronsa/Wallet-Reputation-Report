@@ -24,10 +24,9 @@ export function PremiumTeaserCard(props: PremiumTeaserCardProps) {
 
       <div className="locked-card">
         <div className="locked-badge">Premium</div>
-        <h3>Decision-grade wallet intelligence</h3>
+        <h3>Full reputation report</h3>
         <p>
-          Unlock score breakdown, signal details, counterparties, concentration analysis, activity observations,
-          limitations, and a decision-ready interpretation.
+          Unlock the score breakdown, signal explanations, activity notes, counterparties, and limitations.
         </p>
         {props.owsWalletLabel ? <p className="subtle">Service wallet: {props.owsWalletLabel}</p> : null}
         <p className="subtle">
@@ -61,7 +60,7 @@ export function PremiumTeaserCard(props: PremiumTeaserCardProps) {
                 ? "Payment failed or could not be verified."
                 : props.paymentState === "paid"
                   ? "Payment verified."
-                  : "Premium content is currently locked.")}
+                  : "The full report is locked until payment is verified.")}
         </small>
       </div>
     </section>
