@@ -15,6 +15,47 @@ export function PremiumReportView(props: PremiumReportViewProps) {
       </div>
 
       <div className="report-section">
+        <div className="section-heading">
+          <h2>Operator view</h2>
+          <span className="section-tag">{props.report.operatorView.operatorDecision}</span>
+        </div>
+        <div className="metric-grid">
+          <div className="metric">
+            <span>Decision</span>
+            <strong>{props.report.operatorView.operatorDecision}</strong>
+          </div>
+          <div className="metric">
+            <span>Confidence</span>
+            <strong>{props.report.operatorView.confidenceLevel}</strong>
+          </div>
+        </div>
+        <div className="signal-list">
+          <div className="signal positive">
+            <strong>Behavior pattern</strong>
+            <small>{props.report.operatorView.behaviorPattern}</small>
+          </div>
+          <div className="signal neutral">
+            <strong>Funding source note</strong>
+            <small>{props.report.operatorView.fundingSourceNote}</small>
+          </div>
+          <div className="signal neutral">
+            <strong>Confidence note</strong>
+            <small>{props.report.operatorView.confidenceNote}</small>
+          </div>
+        </div>
+        <div className="signal-list">
+          {props.report.operatorView.topActivityTypes.map((activityType) => (
+            <div className="signal neutral" key={activityType.label}>
+              <strong>{activityType.label}</strong>
+              <small>
+                {activityType.count} observed item(s) | {Math.round(activityType.share * 100)}% of recent classified activity
+              </small>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="report-section">
         <p className="subtle">Explanation only. The score itself remains deterministic and rule-based.</p>
         <div className="signal-list">
           <div className="signal positive">

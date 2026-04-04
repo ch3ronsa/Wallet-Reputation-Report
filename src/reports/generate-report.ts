@@ -3,11 +3,15 @@ import { scoreWallet } from "@/scoring/engine";
 import { ReportGenerator } from "@/types/adapters";
 import { WalletLookupRequest } from "@/types/api";
 import {
+  ActivityTypeSummary,
+  ConfidenceLevel,
   FreeSummary,
   FullReport,
   FullReportFacts,
   FullReportInterpretation,
+  FullReportOperatorView,
   GeneratedReportBundle,
+  OperatorDecision,
   QuickWalletSnapshot,
   RiskLevel,
   WalletProfile,
@@ -117,6 +121,152 @@ function buildFacts(wallet: WalletProfile): FullReportFacts {
   };
 }
 
+function resolveConfidenceLevel(wallet: WalletProfile): ConfidenceLevel {
+  if (wallet.dataQuality.isSparse || wallet.activity.txCount < 3) {
+    return "limited";
+  }
+
+  if (wallet.activity.txCount < 10 || wallet.dataQuality.warnings.length > 0) {
+    return "medium";
+  }
+
+  return "high";
+}
+
+function buildConfidenceNote(wallet: WalletProfile, confidenceLevel: ConfidenceLevel): string {
+  if (confidenceLevel === "high") {
+    return "Confidence is relatively strong because the wallet shows enough balances and transaction history for pattern detection.";
+  }
+
+  if (confidenceLevel === "medium") {
+    return "Confidence is moderate because the wallet has some observable history, but coverage is not yet deep.";
+  }
+
+  if (wallet.dataQuality.warnings.length > 0) {
+    return `Confidence is limited because ${wallet.dataQuality.warnings.join(" ")}`;
+  }
+
+  return "Confidence is limited because the wallet has a shallow observable footprint.";
+}
+
+function resolveOperatorDecision(input: {
+  riskLevel: RiskLevel;
+  confidenceLevel: ConfidenceLevel;
+}): OperatorDecision {
+  if (input.riskLevel === "high") {
+    return "restrict";
+  }
+
+  if (input.riskLevel === "medium") {
+    return "review";
+  }
+
+  return input.confidenceLevel === "limited" ? "review" : "allow";
+}
+
+function buildBehaviorPattern(wallet: WalletProfile): string {
+  if (wallet.contractInteractions.pattern === "contract-heavy") {
+    return "Contract-heavy behavior with repeated smart-contract interaction.";
+  }
+
+  if (wallet.contractInteractions.pattern === "transfer-heavy") {
+    return "Transfer-heavy behavior with limited contract diversity.";
+  }
+
+  if (wallet.contractInteractions.pattern === "mixed") {
+    return "Mixed behavior across transfers, contracts, and treasury movement.";
+  }
+
+  return "Sparse or inactive behavior with limited observable activity.";
+}
+
+function normalizeActivityLabel(rawType?: string, labels?: string[]): string {
+  const haystack = `${rawType ?? ""} ${(labels ?? []).join(" ")}`.toLowerCase();
+
+  if (haystack.includes("bridge")) {
+    return "Bridge";
+  }
+
+  if (haystack.includes("swap") || haystack.includes("dex")) {
+    return "DEX trading";
+  }
+
+  if (haystack.includes("stable")) {
+    return "Stablecoin flow";
+  }
+
+  if (haystack.includes("nft") || haystack.includes("mint")) {
+    return "NFT activity";
+  }
+
+  if (haystack.includes("contract")) {
+    return "Contract interaction";
+  }
+
+  if (haystack.includes("transfer")) {
+    return "Transfers";
+  }
+
+  return "Other";
+}
+
+function buildTopActivityTypes(wallet: WalletProfile): ActivityTypeSummary[] {
+  const counts = new Map<string, number>();
+
+  for (const activity of wallet.recentActivity) {
+    const label = normalizeActivityLabel(activity.type, activity.labels);
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+
+  if (counts.size === 0) {
+    return [{ label: "Unclassified", count: 0, share: 0 }];
+  }
+
+  const total = [...counts.values()].reduce((sum, value) => sum + value, 0);
+
+  return [...counts.entries()]
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 3)
+    .map(([label, count]) => ({
+      label,
+      count,
+      share: total > 0 ? count / total : 0,
+    }));
+}
+
+function buildFundingSourceNote(wallet: WalletProfile): string {
+  const inboundLeader = [...wallet.topCounterparties]
+    .filter((counterparty) => counterparty.inboundCount > 0)
+    .sort((left, right) => right.inboundCount - left.inboundCount)[0];
+
+  if (!inboundLeader) {
+    return "No clear inbound funding source stands out from the observed counterparty set.";
+  }
+
+  const labelText = inboundLeader.labels.length > 0 ? ` Labels: ${inboundLeader.labels.slice(0, 2).join(", ")}.` : "";
+
+  return `Most visible inbound activity points to ${inboundLeader.address}, which appears in ${inboundLeader.inboundCount} inbound interaction(s).${labelText}`;
+}
+
+function buildOperatorView(input: {
+  wallet: WalletProfile;
+  riskLevel: RiskLevel;
+}): FullReportOperatorView {
+  const confidenceLevel = resolveConfidenceLevel(input.wallet);
+
+  return {
+    operatorDecision: resolveOperatorDecision({
+      riskLevel: input.riskLevel,
+      confidenceLevel,
+    }),
+    behaviorPattern: buildBehaviorPattern(input.wallet),
+    topActivityTypes: buildTopActivityTypes(input.wallet),
+    fundingSourceNote: buildFundingSourceNote(input.wallet),
+    confidenceLevel,
+    confidenceNote: buildConfidenceNote(input.wallet, confidenceLevel),
+  };
+}
+
 function buildInterpretation(input: {
   wallet: WalletProfile;
   riskLevel: RiskLevel;
@@ -172,6 +322,10 @@ function buildFullReport(input: {
       riskLevel: input.riskLevel,
       signals: input.signals,
     },
+    operatorView: buildOperatorView({
+      wallet: input.wallet,
+      riskLevel: input.riskLevel,
+    }),
     facts: buildFacts(input.wallet),
     interpretation: buildInterpretation({
       wallet: input.wallet,

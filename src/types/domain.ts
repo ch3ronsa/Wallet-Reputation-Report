@@ -3,6 +3,8 @@ export type SupportedChain = "base" | "ethereum";
 export type SignalImpact = "positive" | "negative" | "neutral";
 
 export type RiskLevel = "low" | "medium" | "high";
+export type OperatorDecision = "allow" | "review" | "restrict";
+export type ConfidenceLevel = "high" | "medium" | "limited";
 
 export interface WalletTransaction {
   hash: string;
@@ -183,6 +185,21 @@ export interface FullReportFacts {
   limitations: string[];
 }
 
+export interface ActivityTypeSummary {
+  label: string;
+  count: number;
+  share: number;
+}
+
+export interface FullReportOperatorView {
+  operatorDecision: OperatorDecision;
+  behaviorPattern: string;
+  topActivityTypes: ActivityTypeSummary[];
+  fundingSourceNote: string;
+  confidenceLevel: ConfidenceLevel;
+  confidenceNote: string;
+}
+
 export interface FullReportInterpretation {
   plainLanguage: string;
   trustPosture: string;
@@ -195,6 +212,7 @@ export interface FullReport {
   generatedAt: string;
   freeSummary: FreeSummary;
   scoreBreakdown: ScoreBreakdown;
+  operatorView: FullReportOperatorView;
   facts: FullReportFacts;
   interpretation: FullReportInterpretation;
 }
