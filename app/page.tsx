@@ -10,8 +10,6 @@ import { FreeSummaryCard } from "@/components/report-ui/free-summary-card";
 import { PremiumTeaserCard } from "@/components/report-ui/premium-teaser-card";
 import { PaywallPanel } from "@/components/report-ui/paywall-panel";
 import { PremiumReportView } from "@/components/report-ui/premium-report-view";
-import { StackProofGrid } from "@/components/report-ui/stack-proof-grid";
-import { DemoBuildNote } from "@/components/report-ui/demo-build-note";
 
 async function postJson<T>(url: string, body: Record<string, unknown>, headers?: HeadersInit): Promise<{
   status: number;
@@ -231,26 +229,15 @@ export default function HomePage() {
     <main className="page-shell">
       <HeroSection />
 
-      <StatusAuditLine
-        dataMode={auditDataMode}
-        paymentMode={paymentMode}
-        paymentState={paymentState}
-        chain={fullReport?.chain ?? freeReport?.chain}
-        generatedAt={fullReport?.generatedAt}
-        moonPayAvailable={paywall?.moonpay?.available}
-        moonPayLabel={paywall?.moonpay?.skillName}
-        owsWalletName={paywall?.owsService?.walletName}
-      />
-
-      <StackProofGrid
-        dataMode={auditDataMode}
-        paymentMode={paymentMode}
-        moonPayAvailable={paywall?.moonpay?.available}
-        moonPaySkillName={paywall?.moonpay?.skillName}
-        owsWalletName={paywall?.owsService?.walletName}
-      />
-
-      <DemoBuildNote dataMode={auditDataMode} paymentMode={paymentMode} />
+      {hasFreeSummary || showPremiumStage ? (
+        <StatusAuditLine
+          dataMode={auditDataMode}
+          paymentMode={paymentMode}
+          paymentState={paymentState}
+          chain={fullReport?.chain ?? freeReport?.chain}
+          generatedAt={fullReport?.generatedAt}
+        />
+      ) : null}
 
       <section className="grid">
         <WalletForm

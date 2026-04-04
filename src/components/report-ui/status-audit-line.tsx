@@ -6,27 +6,15 @@ type StatusAuditLineProps = {
   paymentState: PaymentState;
   chain?: string;
   generatedAt?: string;
-  moonPayAvailable?: boolean;
-  moonPayLabel?: string;
-  owsWalletName?: string;
 };
 
 export function StatusAuditLine(props: StatusAuditLineProps) {
   return (
     <section className="audit-line">
       <span>Data: {props.dataMode === "real" ? "Allium live" : "Demo dataset"}</span>
-      <span>Payments: {props.paymentMode === "real" ? "x402 live" : "x402 demo-safe"}</span>
+      <span>Unlock: {props.paymentMode === "real" ? "x402 live" : "x402 demo-safe"}</span>
       <span>Payment: {props.paymentState}</span>
       {props.chain ? <span>Chain: {props.chain}</span> : null}
-      <span>OWS: {props.owsWalletName ?? "ready"}</span>
-      <span>
-        MoonPay:{" "}
-        {props.moonPayLabel
-          ? `${props.moonPayLabel}${props.moonPayAvailable === false ? " fallback" : ""}`
-          : props.moonPayAvailable === false
-            ? "fallback funding"
-            : "top-up helper"}
-      </span>
       {props.generatedAt ? <span>Generated: {new Date(props.generatedAt).toLocaleString()}</span> : null}
     </section>
   );
