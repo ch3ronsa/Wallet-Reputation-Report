@@ -126,6 +126,14 @@ textarea {
   margin-top: 16px;
 }
 
+.demo-note {
+  margin-top: 16px;
+}
+
+.demo-note p {
+  margin: 0;
+}
+
 .proof-card {
   border: 1px solid var(--panel-border);
   border-radius: 16px;

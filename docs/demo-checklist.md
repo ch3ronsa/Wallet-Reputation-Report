@@ -42,6 +42,7 @@
 
 ## Judge talking points
 
+- This is a scoped hackathon MVP, not a full production payment product yet
 - Free summary is the acquisition layer
 - Full report is the monetized intelligence layer
 - Allium provides the wallet intelligence inputs

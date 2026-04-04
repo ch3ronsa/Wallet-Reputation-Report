@@ -1,5 +1,21 @@
 # Demo Narrative
 
+## Honest demo system
+
+This project is best presented as a scoped hackathon MVP.
+
+- Real in this demo:
+  - deterministic scoring engine
+  - OWS-managed service wallet identity
+  - Ubuntu / WSL verified OWS CLI workflow
+  - free summary to premium unlock product flow
+- Demo-safe in this demo:
+  - fallback wallet dataset instead of live Allium credentials
+  - premium unlock verification instead of fully live x402 settlement
+  - MoonPay funding path shown through product guidance and OWS CLI, not a finished live checkout
+
+That keeps the pitch honest while still showing a credible product direction.
+
 ## One-minute pitch
 
 Wallet Reputation Report turns a wallet address into a trust and risk product.
@@ -19,20 +35,23 @@ Users get a free summary first. If they want the deeper underwriting-style view,
    - this is the monetized intelligence layer
    - payment state is visible
    - the report provider is identified by an OWS service wallet
-6. Start the unlock flow:
+6. Say clearly:
+   - this demo uses fallback data and a demo-safe unlock path
+   - the deterministic score, OWS wallet identity, and OWS CLI path are real
+7. Start the unlock flow:
    - OWS CLI is shown as the explicit buyer/service workflow
    - if funds are needed, MoonPay is shown as the top-up-to-unlock helper
-7. Verify payment and reveal the report.
-8. Show the unlocked sections:
+8. Verify payment and reveal the report.
+9. Show the unlocked sections:
+   - operator decision
+   - confidence level
+   - behavior pattern
    - score breakdown
-   - notable counterparties
-   - concentration observations
-   - activity observations
-   - limitations and interpretation
-9. Close with:
+   - counterparties and limitations
+10. Close with:
    - free summary drives interest
    - full report is paid intelligence
-   - this is a monetizable onchain data product, not just a wallet viewer
+   - live Allium and live x402 settlement are the next step
 
 ## Demo framing
 

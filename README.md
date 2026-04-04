@@ -221,6 +221,8 @@ Demo:
 
 ## Known Limitations
 
+- This submission should be understood as a scoped hackathon MVP, not a fully live production payment product.
+- The deterministic scoring engine is real, but live Allium data is unavailable in this demo build because credentials were not obtained in time.
 - Real x402 settlement is still adapter-isolated and not yet wired to a production facilitator.
 - Real MoonPay execution is currently expressed as a guided integration path rather than a completed live checkout session.
 - Allium field assumptions are isolated, but final endpoint details may vary by account tier.
@@ -241,12 +243,24 @@ Demo:
 Short live narrative:
 
 1. "I enter a wallet address."
-2. "The free summary appears immediately, showing quick trust and risk context."
+2. "The free summary appears immediately, showing quick trust and risk context from the deterministic engine."
 3. "The premium report stays locked because this is the monetized intelligence layer."
-4. "The provider identity is an OWS-managed wallet, and the buyer can pay using an OWS CLI-based workflow."
+4. "This demo build uses a fallback dataset and a demo-safe unlock path, but the OWS service wallet and OWS CLI workflow are real."
 5. "If the buyer wallet does not have enough USDC, MoonPay is the natural top-up path before retrying unlock."
-6. "After payment verification, the full report opens with score breakdown, counterparties, concentration, activity observations, and limitations."
-7. "That makes this an onchain intelligence product with a real monetization surface, not just an analytics dashboard."
+6. "After payment verification, the full report opens with operator decision, activity types, counterparties, concentration, and limitations."
+7. "That makes this a credible hackathon MVP for paid wallet intelligence, even though live data and live settlement are the next step."
+
+## Honest Demo System
+
+- Real today:
+  - deterministic scoring engine
+  - OWS service wallet identity
+  - Ubuntu / WSL verified OWS CLI flow
+  - free-to-paid report UX
+- Demo-safe today:
+  - fallback wallet dataset instead of live Allium
+  - premium unlock verification instead of live x402 settlement
+  - MoonPay shown as the funding path, not a finished live checkout
 
 ## Extra Demo Notes
 

@@ -11,6 +11,7 @@ import { PremiumTeaserCard } from "@/components/report-ui/premium-teaser-card";
 import { PaywallPanel } from "@/components/report-ui/paywall-panel";
 import { PremiumReportView } from "@/components/report-ui/premium-report-view";
 import { StackProofGrid } from "@/components/report-ui/stack-proof-grid";
+import { DemoBuildNote } from "@/components/report-ui/demo-build-note";
 
 async function postJson<T>(url: string, body: Record<string, unknown>, headers?: HeadersInit): Promise<{
   status: number;
@@ -248,6 +249,8 @@ export default function HomePage() {
         moonPaySkillName={paywall?.moonpay?.skillName}
         owsWalletName={paywall?.owsService?.walletName}
       />
+
+      <DemoBuildNote dataMode={auditDataMode} paymentMode={paymentMode} />
 
       <section className="grid">
         <WalletForm
