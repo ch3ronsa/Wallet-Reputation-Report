@@ -10,9 +10,8 @@ export function HeroSection() {
         </p>
       </div>
       <div className="hero-badges">
-        <span className="badge">Deterministic score</span>
-        <span className="badge">Free summary</span>
-        <span className="badge">Paid full report</span>
+        <span className="badge">Free summary first</span>
+        <span className="badge">Premium unlock second</span>
         <span className="badge">OWS + x402</span>
       </div>
     </section>

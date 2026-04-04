@@ -6,7 +6,7 @@ type PremiumReportViewProps = {
 
 export function PremiumReportView(props: PremiumReportViewProps) {
   return (
-    <section className="panel report-card premium-stage-panel">
+    <section className="panel report-card premium-panel premium-stage-panel">
       <div className="section-heading">
         <h2>Premium report</h2>
         <span className="section-tag">

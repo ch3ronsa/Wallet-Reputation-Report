@@ -10,12 +10,12 @@ export function StackProofGrid(props: StackProofGridProps) {
   return (
     <section className="proof-grid">
       <article className="proof-card">
-        <span className="proof-label">Data</span>
+        <span className="proof-label">Free</span>
         <p>{props.dataMode === "real" ? "Allium live mode active." : "Demo dataset active."}</p>
       </article>
 
       <article className="proof-card">
-        <span className="proof-label">Payments</span>
+        <span className="proof-label">Premium</span>
         <p>{props.paymentMode === "real" ? "x402 live path." : "x402 demo-safe unlock path."}</p>
       </article>
 

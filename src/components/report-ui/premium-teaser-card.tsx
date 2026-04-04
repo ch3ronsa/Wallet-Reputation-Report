@@ -16,7 +16,7 @@ export function PremiumTeaserCard(props: PremiumTeaserCardProps) {
     props.paymentState === "failed" ? "negative" : props.paymentState === "paid" ? "positive" : "neutral";
 
   return (
-    <section className="panel report-card">
+    <section className="panel report-card premium-panel">
       <div className="section-heading">
         <h2>Locked full report</h2>
         <span className="section-tag">Paid intelligence</span>

@@ -9,7 +9,7 @@ export function FreeSummaryCard(props: FreeSummaryCardProps) {
   const isSidebar = props.variant === "sidebar";
 
   return (
-    <section className={`panel report-card ${isSidebar ? "summary-sidebar-card" : ""}`}>
+    <section className={`panel report-card free-panel ${isSidebar ? "summary-sidebar-card" : ""}`}>
       <div className="section-heading">
         <h2>Free summary</h2>
         <span className="section-tag">{isSidebar ? "Snapshot" : "Immediate"}</span>

@@ -14,11 +14,11 @@ type StatusAuditLineProps = {
 export function StatusAuditLine(props: StatusAuditLineProps) {
   return (
     <section className="audit-line">
-      <span>Data: {props.dataMode === "real" ? "Allium live" : "Mock fallback"}</span>
-      <span>Payments: {props.paymentMode === "real" ? "x402 live path" : "x402 demo-safe path"}</span>
+      <span>Data: {props.dataMode === "real" ? "Allium live" : "Demo dataset"}</span>
+      <span>Payments: {props.paymentMode === "real" ? "x402 live" : "x402 demo-safe"}</span>
       <span>Payment: {props.paymentState}</span>
       {props.chain ? <span>Chain: {props.chain}</span> : null}
-      <span>OWS wallet: {props.owsWalletName ?? "ready"}</span>
+      <span>OWS: {props.owsWalletName ?? "ready"}</span>
       <span>
         MoonPay:{" "}
         {props.moonPayLabel

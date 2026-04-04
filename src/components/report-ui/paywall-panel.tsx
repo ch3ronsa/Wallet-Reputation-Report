@@ -10,7 +10,7 @@ export function PaywallPanel(props: PaywallPanelProps) {
   }
 
   return (
-    <section className="panel report-card premium-stage-panel">
+    <section className="panel report-card premium-panel premium-stage-panel">
       <div className="section-heading">
         <h2>Unlock details</h2>
         <span className="section-tag">x402 + OWS</span>
